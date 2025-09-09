@@ -31,16 +31,20 @@ All team members must comply with the current version and acknowledge updates as
 - This requirement must be included in the onboarding process.  
 
 ### 2. Credential and Password Storage
-- Google Docs, Notion, chat apps, and email must not be used to store or share credentials.  
-- All credentials must be stored in the designated password manager (e.g., ZohoVault).  
-- Vault links must be shared instead of passwords directly.  
-- Access must follow role-based access control and be reviewed periodically.  
+* Google Docs, Notion, chat apps, and email must not be used to store or share credentials.
+* All credentials must be stored in the designated password manager (e.g., ZohoVault).
+* Vault links must be shared instead of passwords directly.
+* Access must follow role-based access control and be reviewed periodically.
+* When adding a credential to ZohoVault:
+  * **Change ownership to Ivory Hua** immediately after adding.
+  * **Label credentials properly** (e.g., descriptive service name, environment, account type).
+  * **Place credentials in the proper project folder** for organized access and auditing.
 
 ### 3. GitHub Repository Access
 - Access to company GitHub/GitLab repositories is only permitted through accounts registered under Offshorly email addresses.  
 - Repository access must be limited to authorized personnel only.  
 - Repository access must be audited monthly to remove inactive or former employees. 
-- The "dev@offshorly.com" email must be added to the repository for auditing.
+- The "Dev Offshorly" email must be added to the repository for auditing.
 
 ### 4. Change Logging and Access Auditing
 - All changes to sensitive systems must be logged and subject to audit.  

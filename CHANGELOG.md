@@ -5,6 +5,15 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [v0.3] - 2025-09-08
+### Added
+- Credential and Password Storage section updated:
+  - Require ownership of new ZohoVault credentials to be transferred to Ivory.
+  - Require credentials to be labeled properly.
+  - Require placement of credentials in the correct project folder.
+
+---
+
 ## [v0.2] - 2025-09-08
 ### Added
 - Detailed phishing awareness guidelines (hovering over links, verifying senders, etc.).
