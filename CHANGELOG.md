@@ -5,6 +5,12 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [v0.3.1] - 2025-09-08
+### Fixed
+- Minor updates to `README.md` for credential storage instructions and formatting.
+
+---
+
 ## [v0.3] - 2025-09-08
 ### Added
 - Credential and Password Storage section updated:
