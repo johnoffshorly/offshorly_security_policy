@@ -1,5 +1,5 @@
 # Offshorly Security Policy
-**Version:** 0.2 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** August 20, 2025  
+**Version:** 0.3 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** September 9, 2025  
 
 ---
 
