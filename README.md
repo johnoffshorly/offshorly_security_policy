@@ -1,5 +1,5 @@
 # Offshorly Security Policy
-**Version:** 0.5.1 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** May 25, 2026
+**Version:** 0.7 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** July 8, 2026
 
 ---
 
@@ -47,22 +47,86 @@ All team members must comply with the current version and acknowledge updates as
 - Access must follow role-based access control and be reviewed periodically.
 - All passwords must be generated using ZohoVault’s password generator or the source application’s built-in generator. Human-chosen passwords are not permitted for work systems.
 - When adding a credential to ZohoVault:
-  - **Change ownership to Ivory Hua** immediately after adding.
-  - **Label credentials properly** using the naming convention defined in §2.2.
+  - **Set ownership based on credential type:**
+    - **Company-critical or shared accounts** (Tier A2: server, hosting, DNS, financial, domain registrar, accounts not tied to a specific employee's identity) — set owner to **Ivory Hua**. She receives and actions rotation alerts for these.
+    - **Personal-use accounts** (accounts tied to the employee's own email or identity — e.g., personal WP admin, Kinsta, client portals logged in as you) — the **employee is the owner**. Share the credential with the management group so it remains accessible if needed. The employee receives and actions their own rotation alerts.
+  - **Label credentials properly** using the naming convention defined in §2.2. The name is the primary way to identify which employee owns which credential and to route ownership transfers during rotation or offboarding.
   - **Place credentials in the proper project folder** for organized access and auditing.
+- **Migration of existing credentials:** All credentials currently owned by Ivory Hua are being reviewed. Personal-use credentials will be transferred back to the respective employee when the next rotation alert fires. The naming convention (§2.2) is the reference for identifying the correct owner.
 
 #### 2.1 Password Rotation
-- All credentials must be rotated every **3 months (90 days)**, with the following exemptions:
-  - **Database (DB) credentials** — rotation not required. DB credentials are typically protected by network controls (firewall rules, private networks, IP allowlists), are not human-typed in day-to-day use, and are issued via the vault, so calendar-based rotation provides minimal additional security and introduces operational risk.
-  - **SSH credentials** — rotation not required **when key-based authentication is in use** (see §6). Password authentication over SSH must be disabled by default, so there is normally no SSH password to rotate. SSH keys are rotated on personnel change or suspected compromise, not on a calendar.
-    - **Exception:** If key-based authentication is not possible for a particular system (e.g., a legacy host, vendor-managed appliance, or client environment that does not support it), SSH passwords on that system **must** be rotated on the standard 90-day cycle. The reason for the fallback must be documented in the vault entry, and the lead/PM should periodically re-check whether key-based auth has become possible.
-- Offshorly-owned CMS accounts must be rotated on the 90-day cycle.
-- Client-owned CMS accounts: the client must be reminded to rotate their own credentials. This reminder may be included in the monthly client report on every third cycle (every 3 months).
-- For all other systems, rotation cadence and ownership defer to the relevant lead, PM, or client.
+
+Rather than rotating every credential on a calendar, Offshorly takes a **risk-tiered approach**. Credentials with high blast radius and platform-enforceable expiry rotate on a mandatory schedule; high-blast-radius accounts without platform-level enforcement rotate on a recommended schedule; everything else rotates on event.
+
+**Tier A — Mandatory 90-day rotation, platform-enforced**
+
+These accounts have expiry enforced at the platform level — users cannot extend or bypass the policy:
+
+- **Google Workspace account password** — enforced via the Workspace admin console password-expiry policy.
+- **Zoho Vault master password** — enforced via Vault's Master Password Policy.
+
+**Recommended rotation (Tier A2) — high-blast-radius, 90-day cycle encouraged**
+
+These accounts carry high blast radius and must be stored in Zoho Vault under the **Critical Accounts** policy. The policy triggers a 90-day rotation alert to the credential owner (Ivory Hua for company-critical accounts). Rotation is strongly encouraged on that cycle and verified during the monthly audit (§4). Platform-level expiry enforcement is not available for these account types — compliance depends on the owner actioning the alert and audit follow-through:
+
+- Primary identity accounts (Microsoft 365)
+- Domain registrar and DNS management accounts
+- Hosting and cloud root/owner accounts (AWS root, Cloudflare, Vercel/Netlify owner, etc.)
+- Financial accounts (Stripe, banking, payment processors, billing portals)
+- Offshorly-owned CMS admin accounts
+- Client CMS admin accounts where Offshorly holds the credential
+- Other high-privilege accounts as identified by the Security Officer
+
+**Tier B — Rotation on event only**
+
+These rotate on compromise, suspected leak, role change, or staff change, but **not** on a calendar. They are either protected by network controls, key-based auth, MFA + generator-produced passwords, or are operationally risky to rotate:
+
+- Database (DB) credentials — protected by network controls, not human-typed, vault-issued
+- SSH credentials when key-based auth is in use (see §6)
+- API keys, deploy tokens, and service account credentials — rotating these typically breaks production
+- Vendor portals and infrequently-used third-party accounts
+- Read-only and low-privilege accounts
+- All other credentials not listed in Tier A or Tier A2
+
+**Exception — SSH password fallback:** If key-based SSH authentication is not possible for a particular system (legacy host, vendor-managed appliance, client environment that does not support it), the SSH password on that system **must** be rotated on the 90-day cycle. The reason for the fallback must be documented in the vault entry, and the lead/PM should periodically re-check whether key-based auth has become possible.
+
+**Client-owned CMS accounts:** When Offshorly does **not** hold the credential, the client must be reminded to rotate their own. This reminder may be included in the monthly client report on every third cycle (every 3 months).
+
+**Per-project / per-client overrides:** Client contracts may impose stricter rotation requirements; those supersede this policy (see Scope and Limitations).
+
+#### 2.1.1 Implementation in Zoho Vault
+
+Two password policies are configured in Zoho Vault:
+
+- **Critical Accounts** — applied to all Tier A and Tier A2 credentials. Triggers a 90-day rotation alert to the credential owner.
+- **Update May 2026 V2** — applied to Tier B credentials. No calendar-based expiry; rotation is event-driven.
+
+When adding a credential, assign the appropriate policy. Re-classify existing credentials to the correct policy during the next rotation audit.
+
+The 90-day rotation cycle is also activated at the platform level for the two Tier A accounts:
+- **Zoho Vault master password** — configured via Vault's Master Password Policy.
+- **Google Workspace account password** — configured via the Workspace admin console password-expiry policy.
+
+#### 2.1.2 Enforcement
+
+Platform-level expiry enforcement is active on two accounts:
+
+- **Google Workspace**: password expiry is configured in the Workspace admin console at 90 days. Users cannot extend or bypass the policy.
+- **Zoho Vault**: master password expiry is configured via Vault's Master Password Policy at 90 days.
+
+For all other accounts — including Tier A2 accounts — enforcement relies on:
+
+- Vault custom-policy expiry alerts (the **Critical Accounts** policy in Zoho Vault, which triggers a notification to the credential owner when it exceeds 90 days).
+- Monthly access and rotation audit (§4).
+
+Tier A2 accounts have high blast radius but do not support platform-level password expiry; rotation depends on owner discipline and audit follow-through. Labeling these accounts "recommended" is an honest acknowledgment of this reality, not a lesser commitment to securing them.
 
 #### 2.2 Naming Convention
-- Use the format **`Name/Site - Type`**.
-  - Examples: `offshorly.com - WPAdmin`, `offshorly.com - DB`, `offshorly.com - SSH`
+- Use the format **`Name/Site - Type`** for shared or company-owned credentials.
+  - Examples: `offshorly.com - DB`, `offshorly.com - SSH`, `cloudflare.com - Root`
+- For personal-use credentials tied to a specific employee, append the employee's first name in parentheses: **`Name/Site - Type (Name)`**.
+  - Examples: `offshorly.com - WPAdmin (Ali)`, `kinsta.com - Admin (Ali)`
+- The name suffix is how ownership is identified for rotation transfers and offboarding — keep it consistent.
 - Update existing active credentials to follow this convention.
 - Apply the convention to all new credentials going forward.
 
@@ -81,6 +145,7 @@ All team members must comply with the current version and acknowledge updates as
 - Employees are granted the minimum level of access necessary to perform their responsibilities.
 - Access rights are reviewed during onboarding, offboarding, and the rolling review cycle.
 - Offboarding (revocation of Vault, GitHub, client systems, email, and other access) is owned by **HR in coordination with the employee’s PM or project lead**.
+- Before Vault access is revoked, the departing employee must **transfer ownership of all personal-use credentials they own to Ivory Hua**. This must happen while their account is still active — ownership cannot be transferred after access is revoked.
 
 ### 6. Server Security
 - **Operating system:** As much as possible, use a Red Hat–based distribution (e.g., Fedora, Rocky Linux) for company servers.
@@ -129,6 +194,15 @@ Guidelines for recognizing phishing attempts must be followed:
 - **Look for inconsistencies:** Poor grammar, misspellings, or unusual formatting can indicate a phishing attempt.
 - **Do not provide sensitive data:** Never share credentials, MFA codes, or financial details via email, chat, or unknown links.
 - **Report suspicious messages immediately** via the channel above.
+
+#### Lost or Stolen Devices
+
+Any device with active work sessions must be reported **immediately** to the Security Officer and Management if lost or stolen — do not wait to confirm the device is truly gone.
+
+- **Report via the standard incident reporting channel** (direct message to Security Officer and Management on company chat — see Reporting Channel above) as soon as the loss is discovered. Do not wait 24 hours hoping the device turns up; report first, recover later.
+- The report must indicate which work sessions were active at the time (e.g., Google Workspace, Zoho Vault, client systems, GitHub, chat applications) so the Security Officer can force-logout those sessions from the admin side.
+- This applies to **all devices with work accounts logged in**: laptops, phones, tablets, and any other device. Personal phones with work email, Vault, or chat apps logged in are included.
+- If the device is recovered later, do not assume sessions are still secure — treat all active sessions as compromised until they have been force-logged out and re-authenticated from the admin side.
 
 Offshorly maintains an Incident Response Plan outlining escalation procedures and responsibilities.
 

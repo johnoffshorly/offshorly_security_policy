@@ -5,6 +5,23 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [v0.7] - 2026-07-08
+### Changed
+- **§2.1 Password Rotation** — introduced a three-tier rotation model. Tier A (mandatory, platform-enforced, 90 days): Google Workspace account password and Zoho Vault master password only — the two accounts where platform-level expiry can actually be enforced. Tier A2 (recommended, 90-day cycle, audit-verified): Microsoft 365, domain registrar, cloud root accounts, financial accounts, CMS admin accounts, and other high-privilege accounts; must be stored in Vault under the **Critical Accounts** policy. Tier B (event-based, no calendar rotation): DB credentials, SSH key-based auth, API keys, deploy tokens, vendor portals, low-privilege accounts.
+- **§2.1.1 Implementation in Zoho Vault** — documents the two active Vault password policies: **Critical Accounts** (applied to Tier A and Tier A2 credentials; triggers 90-day rotation alert to the credential owner) and **Update May 2026 V2** (applied to Tier B credentials; no calendar expiry). Notes that the Tier A platform-level policies (Vault Master Password Policy and Workspace admin console) are now active.
+- **§2 Credential ownership model** — Zoho Vault does not support secondary alert recipients; only the credential owner receives rotation alerts. Ownership is now split by type: employees own personal-use credentials tied to their own identity (and receive their own alerts); Ivory Hua owns company-critical shared credentials (and actions or coordinates rotation on those). Existing credentials owned by Ivory Hua will transfer back to the respective employee when the next rotation alert fires, using the naming convention to identify the correct owner.
+- **§2.2 Naming Convention** — personal-use credentials (tied to a specific employee) now append the employee's first name in parentheses: `Name/Site - Type (Name)` (e.g., `offshorly.com - WPAdmin (Ali)`). Shared/company credentials retain the existing `Name/Site - Type` format. The name suffix is the primary identifier for ownership transfers during rotation and offboarding.
+- **§5 Offboarding** — added requirement: before Vault access is revoked, the departing employee must transfer ownership of all personal-use credentials they own to Ivory Hua while their account is still active.
+
+### Added
+- **§2.1.2 Enforcement** — new subsection clarifying that platform-level expiry is configured on Google Workspace (admin console) and Zoho Vault (Master Password Policy) only; all other rotation including Tier A2 is enforced via the Critical Accounts Vault policy alert and the monthly audit (§4).
+- **Lost or Stolen Devices** — new subsection under Incident Response. Employees must report lost or stolen devices with active work sessions immediately (do not wait 24 hours); report must list active sessions so force-logout can be issued from the admin side; applies to all devices with work accounts logged in, including personal phones; device recovery does not restore session trust.
+
+### Rationale
+Mandatory rotation is only meaningful where platform-level expiry can be enforced. Listing accounts we cannot force-expire as "mandatory" describes an aspiration, not a control. Concentrating Tier A on the two accounts where enforcement is real, and being explicit about the audit-based nature of Tier A2, gives a more accurate picture of actual security posture. The Vault alert-based enforcement for Tier A2 is honest about what it is: a nudge and an audit trail, not a hard control.
+
+---
+
 ## [v0.5.1] - 2026-05-25
 ### Changed
 - **§2.1 and §6 SSH rotation rule** clarified with a fallback:
