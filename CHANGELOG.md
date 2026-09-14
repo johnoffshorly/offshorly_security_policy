@@ -5,6 +5,12 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [IR Plan v0.4] - 2026-09-14
+### Changed
+- Flagged "Hosting and Stack-Specific Containment" as CMS/WordPress-only for now; enterprise-stack sections (AWS, Azure, etc.) are pending, John to add those given his background there. Noted inline in that section and added to Open Items.
+
+---
+
 ## [IR Plan v0.3] - 2026-09-14
 ### Added
 - **New section: "Hosting and Stack-Specific Containment."** Runbook C's steps are the same everywhere; this breaks out what "rotate credentials," "take offline," and "verify clean" actually mean per environment: Cloudways (DigitalOcean, the current standard, per-app isolation, Varnish purge, platform-level access), cPanel/shared hosting (legacy, multi-domain blast radius, no-SSH constraints, the standing fix of migrating off entirely), Vultr + RunCloud, Kinsta and other managed WP hosts (personal-use accounts, platform restore points), Bedrock/Composer-managed vs. vanilla WordPress (how to verify each is actually clean), and shared codebase networks (a fix on one site generally applies to every site on that codebase). Cross-referenced from Runbook C.

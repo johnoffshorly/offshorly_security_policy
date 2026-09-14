@@ -1,5 +1,5 @@
 # Offshorly Incident Response Plan
-**Version:** 0.3 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** September 14, 2026
+**Version:** 0.4 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** September 14, 2026
 
 ---
 
@@ -154,6 +154,8 @@ Expands the Security Policy's "Lost or Stolen Devices" section into concrete ste
 
 Runbook C's steps are the same everywhere. What "rotate credentials," "take the site offline," and "verify it's clean" actually mean depends on where the site lives and how its code is managed. This section is organized by the environments Offshorly actually runs, not a generic hosting checklist.
 
+**Coverage gap:** everything below is CMS/WordPress hosting. Offshorly also has clients on enterprise stacks (AWS, Azure, etc.), which aren't covered here yet, John to add those sections given his background there. Until that's in, an incident on one of those clients falls back to Runbook A's/C's generic steps with no stack-specific mechanics to lean on.
+
 ### Cloudways (DigitalOcean), current standard for new and migrated sites
 
 - **Isolation model:** one Application per site, each with its own system user and PHP-FPM pool. A compromise on one app does not, by itself, reach the others on the same server. The shared blast radius is server-level: the master SSH/root login and the Cloudways platform account itself.
@@ -295,6 +297,7 @@ These are real, acknowledged gaps rather than things this plan pretends to have 
 - **Reporting channel needs reconciling across documents.** This plan and the Security Policy both name a company-chat DM to the Security Officer and Management as the primary channel. A separate Account Access Recovery guide (written by HR) names `infosecadmin@offshorly.com` as the channel for lost devices, lost authenticators, and suspected compromise, and inconsistently elsewhere in that same guide, `infosec@offshorly.com`. Runbook E above was normalized to point at the existing standard channel rather than either address, but the underlying question (is there an actual monitored shared inbox, and is it meant to replace or supplement the chat DM) is still open.
 - **MFA enforcement status is inconsistent between documents.** The Security Policy states centralized MFA management is "under review." The Account Access Recovery guide states 2FA is already enforced organization-wide across Google Workspace and Zoho. One of these is stale; needs confirming which, and updating the other.
 - **Onboarding/offboarding redesign needs to preserve existing security requirements.** HR's roadmap includes standardizing onboarding ("Onboarding 2.0," moving fully to Zoho) and formalizing offboarding. Whatever that redesign lands on needs to keep: official-email enforcement, personal device baseline confirmation, and security training at onboarding (Security Policy §1, Device and Endpoint Security, Security Training); and the Vault credential-ownership transfer to Ivy before access revocation at offboarding (Security Policy §5). Nothing in the roadmap conflicts with these, they're just not mentioned in it yet.
+- **Enterprise-stack hosting (AWS, Azure, etc.) has no containment section yet.** "Hosting and Stack-Specific Containment" currently only covers CMS/WordPress environments. John is adding the enterprise-stack sections separately.
 
 ---
 
