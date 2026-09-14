@@ -5,6 +5,29 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [IR Plan v0.2] - 2026-09-14
+### Added
+- **Runbook E: Account Access Recovery (Offshorly Email / Google Workspace, and Zoho).** Merged in from HR's Account Access Recovery guide: the employee-side self-recovery checklist, the admin/Infosec five-phase recovery procedure (verify and contain, recover Google, recover Zoho, sweep for persistence, close out), and a quick-reference table. Cross-referenced from Runbooks A and B, which now point here for the Google/Zoho-specific mechanics instead of describing them generically. Added the explicit principle that an access-recovery request is a known social engineering vector and must be verified through a second channel before any reset.
+- Runbook A's persistence-check step now also names Google App Passwords (not just WordPress Application Passwords) and Gmail-specific persistence (forwarding rules, filters, send-as, delegation) as things that survive a plain password reset.
+- New Open Items, surfaced while merging HR's guide: the reporting channel is inconsistent across documents (this plan's company-chat DM vs. the HR guide's `infosecadmin@offshorly.com`, itself inconsistently written elsewhere in the same guide as `infosec@offshorly.com`); the Security Policy's MFA section says centralized MFA is "under review" while the HR guide asserts it's already enforced org-wide, one of these is stale; and HR's onboarding/offboarding redesign (Onboarding 2.0, on Zoho) needs to explicitly carry forward the existing onboarding and offboarding security requirements, which aren't mentioned in that roadmap yet.
+
+### Rationale
+HR had already written a detailed, Google Workspace/Zoho-specific account recovery procedure that was more concrete than this plan's original generic version of the same steps. Merging it in raises the whole document's operational detail rather than leaving two separate, partially-overlapping procedures to drift apart. The conflicts it surfaced (reporting channel, MFA status) are flagged rather than silently resolved, since they're facts about the org's actual current state that need confirming with HR, not something this document can decide unilaterally.
+
+---
+
+## [IR Plan v0.1] - 2026-09-14
+### Added
+- **New companion document: `INCIDENT_RESPONSE.md`.** The standalone Incident Response Plan that the Security Policy's Incident Response section has referenced since it was written, but that didn't exist as its own document until now. Covers roles and responsibilities (Security Officer as incident commander, John as IR backup/technical advisor, Nicole and Ivy's business/HR roles, the CMS team's front-line role, all-personnel reporting duty), a severity classification scheme (Critical/High/Medium/Low, with an automatic override for Restricted/minors' data), a NIST SP 800-61-aligned lifecycle (Preparation, Detection and Analysis, Containment/Eradication/Recovery, Post-Incident Activity), and four runbooks: Account or Credential Compromise, Lost or Stolen Device, WordPress Site Compromise or Security Alert Escalation, and Phishing Report.
+- The runbooks fold in concrete lessons from the aegisuk.net/Grovepark Design incident: check for persistence mechanisms that survive a password reset (WordPress Application Passwords, malicious browser extensions with session-cookie access, email forwarding rules) before calling an account compromise closed; check for credential reuse across unrelated systems; preserve a snapshot of a compromised site before remediating it; check whether other sites share the same codebase, host, or credential before assuming an incident is contained; audit a live server for security tooling installed outside the git/deploy pipeline before any migration touches it, so a redeploy can't silently drop a WAF or 2FA; check for exposed database dumps in git history or web-served directories; and confirm 2FA is actually enforced, not just installed, before closing out.
+- A "When an Incident Outgrows Routine Response" section, addressing the real capacity/burnout and remediation-funding questions the aegisuk.net incident raised: a sustained incident is flagged to Nicole as a resourcing question rather than absorbed solo, and remediation costs beyond routine maintenance are a leadership funding decision, not the Security Officer's to resolve alone.
+- An honest Open Items list: no legal/regulatory breach-notification process yet, no automated alert-triage tooling across monitored sites yet, device management is self-attested only, and the shared dev-tools account (Ali/Ivy/John) is still an open decision, not yet split or tightened.
+
+### Rationale
+The Security Policy has said "Offshorly maintains an Incident Response Plan" since it was written, without that plan actually existing as a document. Writing it down, and building the runbooks around what has actually gone wrong so far rather than a generic template, closes the most concrete overdue gap identified in the Security Roadmap's first workstream.
+
+---
+
 ## [v0.7] - 2026-07-08
 ### Changed
 - **§2.1 Password Rotation** — introduced a three-tier rotation model. Tier A (mandatory, platform-enforced, 90 days): Google Workspace account password and Zoho Vault master password only — the two accounts where platform-level expiry can actually be enforced. Tier A2 (recommended, 90-day cycle, audit-verified): Microsoft 365, domain registrar, cloud root accounts, financial accounts, CMS admin accounts, and other high-privilege accounts; must be stored in Vault under the **Critical Accounts** policy. Tier B (event-based, no calendar rotation): DB credentials, SSH key-based auth, API keys, deploy tokens, vendor portals, low-privilege accounts.
