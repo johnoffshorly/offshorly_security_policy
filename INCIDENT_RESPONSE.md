@@ -1,5 +1,5 @@
 # Offshorly Incident Response Plan
-**Version:** 0.2 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** September 14, 2026
+**Version:** 0.3 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** September 14, 2026
 
 ---
 
@@ -136,7 +136,7 @@ Expands the Security Policy's "Lost or Stolen Devices" section into concrete ste
 
 1. **First-line triage** (currently manual, per-site, done by whoever monitors that site, usually Ali or the assigned CMS dev): distinguish routine blocked-scan noise from something that needs action. **Note:** an automated, aggregated triage flow across all monitored sites doesn't exist yet; this is tracked as an open prevention item, so for now this step relies on a human actually reading the alert.
 2. **Check whether this site shares infrastructure or a codebase with others** before assuming the incident is contained to the one reported site: the same hosting account, the same shared theme/codebase, or a shared/reused admin credential all mean other sites are potentially affected too. Compromises have previously spread silently across multiple domains on one shared host this way.
-3. **If confirmed compromise** (malware found, unexpected admin user, defacement, unexplained file changes):
+3. **If confirmed compromise** (malware found, unexpected admin user, defacement, unexplained file changes). The steps below apply everywhere; for the actual mechanics of rotating access, taking a site offline, and verifying it's clean on the specific host and codebase it runs on, see "Hosting and Stack-Specific Containment" after this runbook:
    - **Preserve a snapshot (files + database) before remediating**, even though the site is compromised. Cleaning up first, without keeping a copy of the "as found" state, has previously made it impossible to trace how or when an attacker got in.
    - Treat the site's hosting/CMS admin credentials as potentially exposed; rotate them.
    - Put the site in maintenance mode or otherwise restrict public access if it's actively serving malicious content. If the live code itself isn't trusted yet, use a static maintenance page rather than a WordPress plugin (a plugin still runs on the untrusted codebase).
@@ -149,6 +149,49 @@ Expands the Security Policy's "Lost or Stolen Devices" section into concrete ste
 4. **If a vulnerability is disclosed but not yet exploited:** the CMS team applies the fix directly if it's within their capacity for that project (existing practice). If it's out of capacity, or the site has no assigned maintainer, escalate to the Security Officer to track until patched.
 5. Notify the PM/client per their contract; if the client owns the credential, fold the rotation reminder into the next monthly report.
 6. Log the outcome regardless of severity. This feeds both the monthly audit and the quarterly WordPress vulnerability check-in.
+
+## Hosting and Stack-Specific Containment
+
+Runbook C's steps are the same everywhere. What "rotate credentials," "take the site offline," and "verify it's clean" actually mean depends on where the site lives and how its code is managed. This section is organized by the environments Offshorly actually runs, not a generic hosting checklist.
+
+### Cloudways (DigitalOcean), current standard for new and migrated sites
+
+- **Isolation model:** one Application per site, each with its own system user and PHP-FPM pool. A compromise on one app does not, by itself, reach the others on the same server. The shared blast radius is server-level: the master SSH/root login and the Cloudways platform account itself.
+- **Containment:**
+  - If the Cloudways platform login is suspected compromised (not just one app), revoke platform-level access first, this affects every site on every server under that account, not just the one that alerted.
+  - Each app's own SSH/SFTP credentials can be reset independently from the Cloudways dashboard without touching other apps on the same server.
+  - Server-wide PHP settings (including `disable_functions`) apply to every app on that server. A hardening change made for one app's incident may need to be checked against every other app on the same box.
+  - Varnish sits in front of the app. A code-level fix will not visibly take effect until Varnish is purged from the Cloudways dashboard; there's no CLI purge from the app-level SSH user.
+- **Recovery:** rebuild by cloning the repo and running `composer install` against its committed lock file rather than trusting the live filesystem as-is (see the Bedrock section below), re-import a known-clean database dump, and rotate every secret in `.env` (DB credentials, WP salts, API keys) rather than carrying old values forward.
+
+### cPanel or other shared hosting (legacy, being migrated off)
+
+- **Multiple unrelated domains commonly live on one shared hosting account.** A compromised cPanel/WHM login is not scoped to a single site; treat every domain on that account as in-scope until each is individually ruled out. This is exactly how a compromise has spread before: one shared, unrotated, no-2FA cPanel login was the root cause of a multi-domain compromise across four separate sites on a single account.
+- **Containment:**
+  - Change the cPanel/WHM account password immediately. On this class of host it's usually the single point of control for every site on the account, not per-site.
+  - Terminate any active FTP/SSH sessions the panel exposes.
+  - SSH access is frequently unavailable on shared hosting. When it is, `.htaccess`-level restriction (deny all, or an IP allowlist on wp-admin) is often the fastest way to restrict one site without touching the others sharing the account.
+  - Forensic file collection without SSH means going through FTP or the host's File Manager, and asking the host for raw access/error logs directly. Budget more time for this than for a Cloudways-hosted site.
+- **The standing fix, not a same-day one:** migrate the affected site(s) off shared hosting entirely. This has been Offshorly's actual response to this exact scenario before, moving to Cloudways, one Application per site, so this class of shared blast radius doesn't recur.
+
+### Vultr + RunCloud
+
+- Same isolation shape as Cloudways: RunCloud manages a per-app system user on a Vultr droplet. Apply the same logic as the Cloudways section above (per-app credential reset without affecting other apps, server-wide settings apply to every app on the box, revoke the RunCloud panel login itself if that's what's compromised rather than only the one app).
+
+### Kinsta and other managed WordPress hosts (personal-use accounts)
+
+- These are typically personal-use credentials under the Security Policy's ownership model (owned by the individual employee, not Ivy/company-critical), so containment starts with that employee's own MFA and session revocation on the platform account itself, before falling back to the host's support.
+- Managed hosts usually ship their own malware scanning and one-click restore points. Use the platform's own restore point as the first recovery option before a manual file-level cleanup; it's faster and more reliable than reconstructing the site by hand.
+
+### Bedrock (Composer-managed) WordPress vs. vanilla WordPress
+
+- **Bedrock (Roots.io) sites:** WordPress core, plugins, and theme are dependency-managed via `composer.json`/`composer.lock`, the doc root is `web/`, and secrets live in `.env`. Verify a suspected compromise by rebuilding from `composer install` against the committed lock file and diffing the result against the live filesystem, rather than trusting whatever is currently deployed. Before trusting that diff, confirm `.gitignore` doesn't exclude `composer.lock` itself (see Runbook C step 3); if it does, the lock file was never authoritative and the diff will pass cleanly regardless of what's actually live.
+- **Vanilla WordPress (non-Bedrock):** plugins and themes are committed directly into git, doc root is the repo root, no composer layer. Before trusting a pure git-based redeploy or rebuild here, audit the live server directly for anything installed by hand outside git (security plugins, WAF rules, custom login-URL plugins, 2FA). A previous git-based redeploy on this kind of setup went live with none of those, because they were never tracked in the repo to begin with.
+- Either stack: treat a raw `.sql` database dump found committed in git history, or sitting in a web-served uploads/export directory, as an exposure to close, per Runbook C.
+
+### Shared codebase networks
+
+- Some clients run several sites on one shared codebase or theme. A vulnerability, malware injection, or fix that applies to one site generally applies to every site on that same codebase. Treat every site on the shared codebase as in scope for triage the moment one of them alerts, and roll the fix out across all of them together rather than patching one and leaving the rest exposed until they alert independently too.
 
 ### D. Phishing Report
 

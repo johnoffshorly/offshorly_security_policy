@@ -5,6 +5,12 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [IR Plan v0.3] - 2026-09-14
+### Added
+- **New section: "Hosting and Stack-Specific Containment."** Runbook C's steps are the same everywhere; this breaks out what "rotate credentials," "take offline," and "verify clean" actually mean per environment: Cloudways (DigitalOcean, the current standard, per-app isolation, Varnish purge, platform-level access), cPanel/shared hosting (legacy, multi-domain blast radius, no-SSH constraints, the standing fix of migrating off entirely), Vultr + RunCloud, Kinsta and other managed WP hosts (personal-use accounts, platform restore points), Bedrock/Composer-managed vs. vanilla WordPress (how to verify each is actually clean), and shared codebase networks (a fix on one site generally applies to every site on that codebase). Cross-referenced from Runbook C.
+
+---
+
 ## [IR Plan v0.2] - 2026-09-14
 ### Added
 - **Runbook E: Account Access Recovery (Offshorly Email / Google Workspace, and Zoho).** Merged in from HR's Account Access Recovery guide: the employee-side self-recovery checklist, the admin/Infosec five-phase recovery procedure (verify and contain, recover Google, recover Zoho, sweep for persistence, close out), and a quick-reference table. Cross-referenced from Runbooks A and B, which now point here for the Google/Zoho-specific mechanics instead of describing them generically. Added the explicit principle that an access-recovery request is a known social engineering vector and must be verified through a second channel before any reset.
