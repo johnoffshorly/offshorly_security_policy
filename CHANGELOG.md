@@ -5,7 +5,10 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [IR Plan v0.4] - 2026-09-14
+## [IR Plan v0.5] - 2026-09-14
+### Added
+- **Draft AWS and Azure sections** in "Hosting and Stack-Specific Containment," as a starting outline for John rather than a blank page: root/Global Admin compromise (Critical severity, same tier as Google Workspace admin or Zoho Vault master), IAM user/role and Entra ID account compromise, EC2/VM isolation and snapshot-before-terminate, S3/Blob exposure, Secrets Manager/Key Vault rotation, and which logs (CloudTrail, VPC Flow Logs, GuardDuty, Azure Activity Log, Entra sign-in logs) are the forensic source of truth. Explicitly marked as a generic, unvalidated draft, not checked against Offshorly's actual client account structures, pending John's review.
+
 ### Changed
 - Flagged "Hosting and Stack-Specific Containment" as CMS/WordPress-only for now; enterprise-stack sections (AWS, Azure, etc.) are pending, John to add those given his background there. Noted inline in that section and added to Open Items.
 

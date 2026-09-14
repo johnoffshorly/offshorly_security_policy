@@ -1,5 +1,5 @@
 # Offshorly Incident Response Plan
-**Version:** 0.4 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** September 14, 2026
+**Version:** 0.5 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** September 14, 2026
 
 ---
 
@@ -154,7 +154,7 @@ Expands the Security Policy's "Lost or Stolen Devices" section into concrete ste
 
 Runbook C's steps are the same everywhere. What "rotate credentials," "take the site offline," and "verify it's clean" actually mean depends on where the site lives and how its code is managed. This section is organized by the environments Offshorly actually runs, not a generic hosting checklist.
 
-**Coverage gap:** everything below is CMS/WordPress hosting. Offshorly also has clients on enterprise stacks (AWS, Azure, etc.), which aren't covered here yet, John to add those sections given his background there. Until that's in, an incident on one of those clients falls back to Runbook A's/C's generic steps with no stack-specific mechanics to lean on.
+**Coverage note:** the CMS/WordPress sections below are grounded in incidents Offshorly has actually had. The AWS and Azure sections further down are marked as drafts, a generic cloud-IR starting point, not yet checked against how Offshorly's actual enterprise clients are set up. John to confirm and complete those given his background there.
 
 ### Cloudways (DigitalOcean), current standard for new and migrated sites
 
@@ -194,6 +194,40 @@ Runbook C's steps are the same everywhere. What "rotate credentials," "take the 
 ### Shared codebase networks
 
 - Some clients run several sites on one shared codebase or theme. A vulnerability, malware injection, or fix that applies to one site generally applies to every site on that same codebase. Treat every site on the shared codebase as in scope for triage the moment one of them alerts, and roll the fix out across all of them together rather than patching one and leaving the rest exposed until they alert independently too.
+
+### AWS (draft, starting point for John to confirm and complete)
+
+Everything below is a generic cloud-IR skeleton, not yet validated against how Offshorly's actual AWS clients are set up (single account vs. AWS Organizations/multi-account, how IAM is structured, what logging is actually turned on). Treat this as a starting outline, not a finished procedure.
+
+- **Isolation model:** confirm per client whether the account is standalone or part of an AWS Organization, and who holds root/organization-management-account access. That answer determines whether an incident is contained to one account or needs checking across every linked account.
+- **Root account compromise (Critical, same tier as a compromised Google Workspace admin or Zoho Vault master):** rotate the root password and root MFA device immediately, delete or rotate any root-level access keys (root should not normally have active access keys at all; if it does, that's itself a finding), and review CloudTrail for root-level API activity in the suspected window.
+- **IAM user or role compromise:**
+  - Deactivate the IAM user's console password and access keys immediately from a separate, trusted admin session.
+  - Existing temporary credentials (STS tokens) issued to a compromised role don't have a simple single-call revoke; contain them by removing/tightening the role's permissions or attaching an explicit deny policy, then rotating whatever the role could access.
+  - Review CloudTrail for that principal's recent API calls to establish scope, same purpose as checking Vault's access log in Runbook A.
+- **EC2/compute compromise:** isolate at the network level first (move the instance to a quarantine security group with no inbound/outbound rules) rather than terminating it. Snapshot the EBS volume before doing anything further, same "preserve before you remediate" principle as Runbook C's site-snapshot step.
+- **S3 exposure:** check the bucket's public-access settings and policy/ACLs. If S3 data-event logging is enabled, use it to check whether an unknown principal actually read anything in the exposed prefix; treat anything sensitive there as needing rotation regardless.
+- **Secrets:** rotate anything in Secrets Manager, Parameter Store, or a deployed `.env` that the compromised principal or instance could read.
+- **Forensics:** CloudTrail (API/management activity), VPC Flow Logs (network activity), and GuardDuty (if enabled) are the primary sources. Confirm which of these are actually turned on for a given client account before assuming any of them exist; if none are, that's a Preparation gap worth raising on its own.
+
+### Azure (draft, starting point for John to confirm and complete)
+
+Same caveat as the AWS section: a generic skeleton, not yet checked against Offshorly's actual Azure client setups.
+
+- **Isolation model:** confirm per client whether there's one subscription or several under a shared Entra ID (Azure AD) tenant, and who holds Global Administrator access at the tenant level, since that's the equivalent blast-radius question to AWS's root/Organizations question above.
+- **Entra ID (Azure AD) account compromise:** revoke the user's active sessions, reset the password, and review sign-in logs and Conditional Access reports for the suspected window.
+- **Service principal / app registration compromise:** rotate its client secret or certificate, and review its role assignments (RBAC) to establish what it could actually reach, the blast radius is defined by those role assignments, not just the credential itself.
+- **VM compromise:** isolate via a Network Security Group set to deny all inbound/outbound, and snapshot the disk before further action, same preserve-then-contain principle as everywhere else in this plan.
+- **Storage Account / Blob exposure:** check the account's public-access configuration, and rotate storage account keys and any issued SAS tokens.
+- **Key Vault:** rotate any secret a compromised identity could read.
+- **Forensics:** Azure Activity Log (management-plane actions), Microsoft Entra sign-in logs, and Defender for Cloud/Azure Monitor alerts (if enabled) are the primary sources, same confirm-it's-actually-on caveat as CloudTrail above.
+
+### General cloud principles (both AWS and Azure)
+
+- **Preserve, then contain, applies here too:** isolate compute resources at the network level and snapshot before terminating or rebuilding them, don't destroy the evidence in the process of cleaning up.
+- **Root/Global Admin-level compromise is Critical by default**, the same severity tier as a compromised Google Workspace admin or Zoho Vault master in the Severity Classification table above.
+- **Cloud provider audit logs are the primary source of truth for scope.** If they're not enabled or not retained long enough on a given client's account, that's a standalone finding for the Security Roadmap's prevention workstream, not something to discover for the first time mid-incident.
+- **Confirm actual account/subscription topology before assuming an incident is scoped to one project.** A compromise that starts in one account or subscription can reach further if organization-level or tenant-level access is shared.
 
 ### D. Phishing Report
 
@@ -297,7 +331,7 @@ These are real, acknowledged gaps rather than things this plan pretends to have 
 - **Reporting channel needs reconciling across documents.** This plan and the Security Policy both name a company-chat DM to the Security Officer and Management as the primary channel. A separate Account Access Recovery guide (written by HR) names `infosecadmin@offshorly.com` as the channel for lost devices, lost authenticators, and suspected compromise, and inconsistently elsewhere in that same guide, `infosec@offshorly.com`. Runbook E above was normalized to point at the existing standard channel rather than either address, but the underlying question (is there an actual monitored shared inbox, and is it meant to replace or supplement the chat DM) is still open.
 - **MFA enforcement status is inconsistent between documents.** The Security Policy states centralized MFA management is "under review." The Account Access Recovery guide states 2FA is already enforced organization-wide across Google Workspace and Zoho. One of these is stale; needs confirming which, and updating the other.
 - **Onboarding/offboarding redesign needs to preserve existing security requirements.** HR's roadmap includes standardizing onboarding ("Onboarding 2.0," moving fully to Zoho) and formalizing offboarding. Whatever that redesign lands on needs to keep: official-email enforcement, personal device baseline confirmation, and security training at onboarding (Security Policy §1, Device and Endpoint Security, Security Training); and the Vault credential-ownership transfer to Ivy before access revocation at offboarding (Security Policy §5). Nothing in the roadmap conflicts with these, they're just not mentioned in it yet.
-- **Enterprise-stack hosting (AWS, Azure, etc.) has no containment section yet.** "Hosting and Stack-Specific Containment" currently only covers CMS/WordPress environments. John is adding the enterprise-stack sections separately.
+- **Enterprise-stack hosting (AWS, Azure) sections are a draft, not yet confirmed.** A generic cloud-IR starting outline was added to "Hosting and Stack-Specific Containment" so John isn't starting from a blank page, but it hasn't been checked against how Offshorly's actual AWS/Azure client accounts are structured (single vs. multi-account/subscription, what logging is actually enabled, real IAM/RBAC setup). Treat as unvalidated until John reviews it.
 
 ---
 
