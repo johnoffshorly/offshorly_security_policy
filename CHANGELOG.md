@@ -5,7 +5,10 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [IR Plan v0.5] - 2026-09-14
+## [IR Plan v0.6] - 2026-09-14
+### Changed
+- **Resolved the reporting-channel Open Item.** `infosecadmin@offshorly.com` and `infosec@offshorly.com` are two intentionally separate addresses, not an inconsistency: `infosecadmin@offshorly.com` is for a person reporting an incident (alongside the existing chat DM to Security Officer + Management), `infosec@offshorly.com` is where automated security-tool alerts from various projects land. Updated the Reporting Channel section, Runbook B, Runbook C's alert-triage step, Runbook E's employee steps and quick-reference table, and Open Items to reflect this.
+
 ### Added
 - **Draft AWS and Azure sections** in "Hosting and Stack-Specific Containment," as a starting outline for John rather than a blank page: root/Global Admin compromise (Critical severity, same tier as Google Workspace admin or Zoho Vault master), IAM user/role and Entra ID account compromise, EC2/VM isolation and snapshot-before-terminate, S3/Blob exposure, Secrets Manager/Key Vault rotation, and which logs (CloudTrail, VPC Flow Logs, GuardDuty, Azure Activity Log, Entra sign-in logs) are the forensic source of truth. Explicitly marked as a generic, unvalidated draft, not checked against Offshorly's actual client account structures, pending John's review.
 

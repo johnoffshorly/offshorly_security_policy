@@ -1,5 +1,5 @@
 # Offshorly Incident Response Plan
-**Version:** 0.5 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** September 14, 2026
+**Version:** 0.6 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** September 14, 2026
 
 ---
 
@@ -39,11 +39,14 @@ None of these roles are full-time security positions. Capacity is shared across 
 
 ## Reporting Channel
 
-Same channel as the Security Policy, restated here for completeness:
+For a human reporting an incident, two channels are both valid:
 
-- **Primary:** direct message to the Security Officer and Management on the company chat app, including off-hours, weekends, and holidays. Don't wait for business hours.
-- **If unreachable:** escalate to the employee's PM or project lead, and keep attempting to reach Security/Management.
+- **Direct message** to the Security Officer and Management on the company chat app (per the Security Policy), including off-hours, weekends, and holidays. Don't wait for business hours.
+- **Email `infosecadmin@offshorly.com`.** Use this when chat isn't accessible, sending from any working channel (personal email, SMS, or through your Team Lead) rather than waiting until you can reach the company chat app.
+- **If both are unreachable:** escalate to the employee's PM or project lead, and keep attempting to reach Security/Management.
 - **Follow-up in writing** within 24 hours (email or written chat summary), including: what was observed, when, systems/accounts/data potentially affected, and actions already taken.
+
+This is distinct from `infosec@offshorly.com`, which is where automated security-tool alerts from various projects (Wordfence, BlogVault, MalCare, and similar) land, not a channel for a person to report an incident to. See Runbook C for how those alerts get triaged.
 
 ---
 
@@ -122,7 +125,7 @@ Some incidents stop being a same-day fix and become a sustained, multi-week inve
 
 Expands the Security Policy's "Lost or Stolen Devices" section into concrete steps.
 
-1. Report immediately via the standard channel. Don't wait to confirm the device is truly gone.
+1. Report immediately via the chat DM or `infosecadmin@offshorly.com`. Don't wait to confirm the device is truly gone.
 2. List every work session known to be active on the device (Google Workspace, Zoho Vault, client systems, GitHub, chat apps).
 3. Security Officer (or John, if unavailable) force-logs-out each listed session from the admin side. See Runbook E for the Google Workspace and Zoho specific steps.
 4. If the device has remote wipe/lock available and configured (e.g. Find My, Android device manager) and holds company data, trigger it. **Note:** device management is currently self-attested only, not centrally enforced by Offshorly, so this step depends on whatever the employee personally has set up. Closing that gap is tracked as a prevention item, not solved by this plan.
@@ -134,7 +137,7 @@ Expands the Security Policy's "Lost or Stolen Devices" section into concrete ste
 
 **Trigger:** a security-plugin alert (Wordfence, file-change monitor, BlogVault, MalCare, or whichever tool the site uses) that looks like more than routine blocked-scan traffic: a new vulnerability disclosure, malware or file-change detection, or a WAF block-rate spike well above that site's normal baseline.
 
-1. **First-line triage** (currently manual, per-site, done by whoever monitors that site, usually Ali or the assigned CMS dev): distinguish routine blocked-scan noise from something that needs action. **Note:** an automated, aggregated triage flow across all monitored sites doesn't exist yet; this is tracked as an open prevention item, so for now this step relies on a human actually reading the alert.
+1. **First-line triage** (currently manual, per-site, done by whoever monitors that site, usually Ali or the assigned CMS dev): security-tool alerts (Wordfence, BlogVault, MalCare, and similar) land in `infosec@offshorly.com`, and distinguishing routine blocked-scan noise from something that needs action is currently a human reading that inbox, not an automated process. **Note:** an automated, aggregated triage flow across all monitored sites doesn't exist yet; this is tracked as an open prevention item.
 2. **Check whether this site shares infrastructure or a codebase with others** before assuming the incident is contained to the one reported site: the same hosting account, the same shared theme/codebase, or a shared/reused admin credential all mean other sites are potentially affected too. Compromises have previously spread silently across multiple domains on one shared host this way.
 3. **If confirmed compromise** (malware found, unexpected admin user, defacement, unexplained file changes). The steps below apply everywhere; for the actual mechanics of rotating access, taking a site offline, and verifying it's clean on the specific host and codebase it runs on, see "Hosting and Stack-Specific Containment" after this runbook:
    - **Preserve a snapshot (files + database) before remediating**, even though the site is compromised. Cleaning up first, without keeping a copy of the "as found" state, has previously made it impossible to trace how or when an attacker got in.
@@ -247,7 +250,7 @@ Same caveat as the AWS section: a generic skeleton, not yet checked against Offs
 **A recovery request is a known social engineering vector.** Never verify identity from the requesting channel alone (an email claiming to be someone locked out is exactly what an attacker would send); confirm via a second channel (video call, a known personal number, or the person's Team Lead) before any reset action.
 
 **Employee side, work through in order:**
-1. Report it immediately through any working channel (personal email, chat, SMS, or via your Team Lead), naming the affected account and what happened. Don't wait to confirm.
+1. Email `infosecadmin@offshorly.com` immediately, from any working channel (personal email, chat, SMS, or via your Team Lead) if your work email itself is what's affected, naming the affected account and what happened. Don't wait to confirm.
 2. Identify what was lost: password only, device, authenticator, or suspected compromise, since that determines the recovery path.
 3. Locate the backup codes issued at onboarding. Having them means self-recovery; not having them means HR/Admin handles it.
 4. Expect identity verification before any reset happens, no exceptions.
@@ -293,10 +296,10 @@ Same caveat as the AWS section: a generic skeleton, not yet checked against Offs
 | If you... | Then... |
 |---|---|
 | Forgot your email password, or need backup codes | Contact HR/Admin |
-| Lost a device or authenticator | Report immediately via the standard reporting channel |
+| Lost a device or authenticator | Email `infosecadmin@offshorly.com` immediately |
 | Forgot your Zoho password | Contact HR/Admin |
 | Can't complete Zoho MFA (OneAuth) | Try your passphrase, then backup codes, then escalate to HR/Admin or the Security Officer |
-| Suspect your account is compromised | Report immediately via the standard reporting channel |
+| Suspect your account is compromised | Email `infosecadmin@offshorly.com` immediately |
 
 Never share backup codes, passphrases, or one-time codes with anyone. Identity is always verified before any reset.
 
@@ -325,10 +328,10 @@ For every Critical or High severity incident, once it's closed:
 These are real, acknowledged gaps rather than things this plan pretends to have solved:
 
 - **No legal or regulatory breach-notification process exists yet.** No legal counsel has been engaged and SOC 2 is not yet in place. Until this is defined, any suspected exposure of client data is escalated to Nicole (and the CEO, if warranted) before any external communication goes out, rather than following a fixed notification procedure.
-- **No automated alert-triage tooling across monitored sites yet.** The process in Runbook C step 1 is manual and per-site. Options have been scoped (Gmail filters, a lightweight automation tool with a tracking sheet, or eventually a SIEM) but nothing is built yet.
+- **No automated alert-triage tooling across monitored sites yet.** Alerts land in `infosec@offshorly.com`, but the process in Runbook C step 1 is a manual, per-site read of that inbox. Options have been scoped (Gmail filters, a lightweight automation tool with a tracking sheet, or eventually a SIEM) but nothing is built yet.
 - **Device management is self-attested only.** There is no centrally enforced remote wipe/lock capability; Runbook B step 4 depends on what each employee has personally configured.
 - **The shared dev-tools account (held by Ali, Ivy, and John) is still an open decision**, not yet split into individual logins or otherwise tightened. Until it's resolved, an incident involving any one of those three devices means treating that shared account as in-scope for Runbook A, not just the individual's personal credentials.
-- **Reporting channel needs reconciling across documents.** This plan and the Security Policy both name a company-chat DM to the Security Officer and Management as the primary channel. A separate Account Access Recovery guide (written by HR) names `infosecadmin@offshorly.com` as the channel for lost devices, lost authenticators, and suspected compromise, and inconsistently elsewhere in that same guide, `infosec@offshorly.com`. Runbook E above was normalized to point at the existing standard channel rather than either address, but the underlying question (is there an actual monitored shared inbox, and is it meant to replace or supplement the chat DM) is still open.
+- ~~Reporting channel needs reconciling across documents.~~ **Resolved (2026-09-14):** `infosecadmin@offshorly.com` and `infosec@offshorly.com` are two intentionally separate addresses, not an inconsistency. `infosecadmin@offshorly.com` is for a person reporting an incident (alongside the chat DM); `infosec@offshorly.com` is the intake for automated security-tool alerts across projects. Both are now reflected in the Reporting Channel section and Runbook C.
 - **MFA enforcement status is inconsistent between documents.** The Security Policy states centralized MFA management is "under review." The Account Access Recovery guide states 2FA is already enforced organization-wide across Google Workspace and Zoho. One of these is stale; needs confirming which, and updating the other.
 - **Onboarding/offboarding redesign needs to preserve existing security requirements.** HR's roadmap includes standardizing onboarding ("Onboarding 2.0," moving fully to Zoho) and formalizing offboarding. Whatever that redesign lands on needs to keep: official-email enforcement, personal device baseline confirmation, and security training at onboarding (Security Policy §1, Device and Endpoint Security, Security Training); and the Vault credential-ownership transfer to Ivy before access revocation at offboarding (Security Policy §5). Nothing in the roadmap conflicts with these, they're just not mentioned in it yet.
 - **Enterprise-stack hosting (AWS, Azure) sections are a draft, not yet confirmed.** A generic cloud-IR starting outline was added to "Hosting and Stack-Specific Containment" so John isn't starting from a blank page, but it hasn't been checked against how Offshorly's actual AWS/Azure client accounts are structured (single vs. multi-account/subscription, what logging is actually enabled, real IAM/RBAC setup). Treat as unvalidated until John reviews it.
