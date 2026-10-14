@@ -5,8 +5,16 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [IR Plan v0.6] - 2026-09-14
+## [IR Plan v0.7] - 2026-10-14
+### Added
+- **New Definitions section**, a plain-language glossary for recurring technical terms (rotate, revoke/force-log-out, isolate/contain, persistence mechanism, preserve/snapshot, eradicate, severity/classify), for readers who aren't deep technical users but do perform these actions (Ivy, Nicole).
+- **"At a glance" summary** at the top of every runbook (A through E): who acts, typical severity, and the core action sequence, before the detailed numbered steps.
+- **New first step in Runbook B:** before anything else, the employee removes access on their own end if still possible (remote sign-out, their own Find My/remote lock, or physically retrieving the device), in parallel with reporting, not instead of it.
+
 ### Changed
+- **Escalation re-routed through PMs for anything short of Critical.** Roles, the Restricted-data severity override, and the Communication section all previously routed to Nicole by default. Now: Critical goes to Nicole directly and immediately; High goes to the relevant PM first, with Nicole looped in only when her resourcing/legal/client-facing call is actually needed; Medium/Low stay in the normal channel with the PM informed. Nicole's and the PM's Roles rows updated to match.
+- **Corrected who actually performs an account reset.** John (IR Backup/Technical Advisor) was described as handling session revocation and credential rotation directly; per Ivy, that's actually done by the admins with Google Workspace/Zoho console access (Ali, Ivy, Nicole), not John, whose role is advisory (forensic reasoning, infrastructure decisions). Fixed in Roles (new explicit note), Runbook B, and Runbook E's "at a glance."
+- **De-duplicated lost-device guidance.** The Quick Reference table in Runbook E repeated a generic "lost a device" instruction that overlapped with Runbook B. Split into two distinct, clearly different rows: losing just the authenticator app (device still in hand) stays in Runbook E, losing the device itself now points to Runbook B instead of restating it.
 - **Resolved the reporting-channel Open Item.** `infosecadmin@offshorly.com` and `infosec@offshorly.com` are two intentionally separate addresses, not an inconsistency: `infosecadmin@offshorly.com` is for a person reporting an incident (alongside the existing chat DM to Security Officer + Management), `infosec@offshorly.com` is where automated security-tool alerts from various projects land. Updated the Reporting Channel section, Runbook B, Runbook C's alert-triage step, Runbook E's employee steps and quick-reference table, and Open Items to reflect this.
 
 ### Added

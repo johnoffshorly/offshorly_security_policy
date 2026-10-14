@@ -1,5 +1,5 @@
 # Offshorly Incident Response Plan
-**Version:** 0.6 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** September 14, 2026
+**Version:** 0.7 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** October 14, 2026
 
 ---
 
@@ -19,19 +19,37 @@ It follows the same rolling-release model as the Security Policy: reviewed month
 
 ---
 
+## Definitions
+
+Plain-language definitions for the technical terms this plan uses repeatedly. If a runbook step doesn't make sense, check here before asking what it means mid-incident.
+
+- **Rotate** (a credential): change it to a new, generator-produced value and update it everywhere it's actually used, so the old value stops working anywhere. For a password this means an actual password change, not just a prompt dismissed.
+- **Revoke / force-log-out**: end an active sign-in session from the admin side. The person (or attacker) using that session gets kicked out immediately and has to sign in again, which fails if the password has also been rotated.
+- **Isolate / contain**: restrict something's ability to do further damage without necessarily removing the cause yet, e.g. putting a site in maintenance mode, or moving a server to a network security group with no outside access.
+- **Persistence mechanism**: a way an attacker keeps access even after the obvious fix. A rotated password alone does not remove these; see Runbook A step 5 for the specific ones to check (Application Passwords, browser extensions, forwarding rules, OAuth grants).
+- **Preserve / snapshot**: keep a copy of the current state (files, database, session list, logs) before changing or cleaning anything, so what actually happened can still be reconstructed afterward.
+- **Eradicate**: remove the actual cause, not just its symptom. Rotating a password addresses the symptom; removing a persistence mechanism addresses the cause.
+- **Severity / classify**: the Critical/High/Medium/Low label assigned to an incident (see Severity Classification), which determines how fast it's acted on and who gets looped in.
+
+This is a glossary for jargon used in this plan, not a restatement of the Security Policy's credential rules; see the Security Policy §2 for the actual rotation schedule and ownership rules.
+
+---
+
 ## Roles and Responsibilities
 
 Offshorly's day-to-day security work is done by an informal team of four, each with security as a secondary responsibility on top of their main role. This plan uses that same team as the incident response team, with the Security Officer as incident commander.
 
 | Role | Person | Responsibility during an incident |
 |---|---|---|
-| **Security Officer / Incident Commander** | Ali | Owns triage and severity classification. Coordinates containment and recovery. Runs the post-incident review. Is the default point of contact for the reporting channel below. |
-| **IR Backup / Technical Advisor** | John | Steps in when Ali is unreachable or unavailable. Second opinion on technical containment decisions (session revocation, credential rotation, site remediation). Advisory, not hands-on by default. |
-| **General Manager** | Nicole | Business-side decisions during an incident: resourcing, prioritization against client work, and any client- or public-facing communication. Final call on anything with legal or reputational exposure (see Open Items). |
-| **HR** | Ivy | Personnel-side actions: offboarding-related compromises, coordinating with the affected employee, anything that touches employment status. |
+| **Security Officer / Incident Commander** | Ali | Owns triage and severity classification. Coordinates containment and recovery. Runs the post-incident review. Is the default point of contact for the reporting channel below. Holds admin access for account resets (see note below). |
+| **IR Backup / Technical Advisor** | John | Steps in when Ali is unreachable or unavailable, as a technical advisor: forensic reasoning, infrastructure/hosting decisions, and a second opinion on containment calls. Does not typically perform the account-reset actions in Runbook E himself, see the note below. |
+| **General Manager** | Nicole | Direct escalation contact for Critical-severity incidents. Business-side decisions during an incident: resourcing, prioritization against client work, and any client- or public-facing communication. Final call on anything with legal or reputational exposure (see Open Items). Looped in on High-severity incidents when the PM or Security Officer needs her resourcing, legal, or client-facing call, not as a default first contact. Holds admin access for account resets (see note below). |
+| **HR** | Ivy | Personnel-side actions: offboarding-related compromises, coordinating with the affected employee, anything that touches employment status. Holds admin access for account resets (see note below). |
 | **CMS Dev Team** | Project-assigned devs | First line of detection and action for WordPress vulnerabilities and site alerts on projects they maintain. Apply fixes directly within their available capacity (existing practice); escalate to the Security Officer when a fix is out of capacity, the site is unmaintained, or a compromise (not just a disclosed vulnerability) is suspected. |
-| **PM / Project Lead** | Varies | Escalation point when the Security Officer and Management are both unreachable (per the Security Policy's reporting channel). Owns client-facing coordination for their project alongside Nicole. |
+| **PM / Project Lead** | Varies | First point of contact for a Medium- or High-severity incident on their own project: kept informed, coordinates client-facing comms, and is who the Security Officer escalates to by default. Also the fallback point when the Security Officer and Management are both unreachable (per the Security Policy's reporting channel). |
 | **All personnel** | Everyone | Reporting obligation: report suspicious activity within 24 hours via the standard channel (see below). Report device loss and phishing immediately, don't wait. |
+
+**Who actually resets an account:** Google Workspace and Zoho admin console access (the actions in Runbook E: password resets, session revocation, backup codes) is held by Ali, Ivy, and Nicole. John does not hold or use this access; his role in an account-related incident is advisory (scoping, deciding what's safe to do), not performing the reset itself.
 
 None of these roles are full-time security positions. Capacity is shared across this list plus everyone's primary job, which is the real constraint on response speed, not any single person's availability.
 
@@ -63,7 +81,7 @@ The Security Officer classifies every reported incident as soon as there's enoug
 
 When in doubt, classify one level higher and downgrade later. It's cheaper to stand down from a false alarm than to under-react to a real one.
 
-**Automatic override:** if an incident touches data in the Restricted category (see the Security Policy's Data Classification section), including anything relating to minors, classify as at least High regardless of how contained the technical scope looks, and loop in Nicole immediately. This isn't about technical severity, it's about legal and reputational exposure that a small technical footprint can still carry.
+**Automatic override:** if an incident touches data in the Restricted category (see the Security Policy's Data Classification section), including anything relating to minors, classify as at least High regardless of how contained the technical scope looks, and notify the PM immediately. Loop in Nicole too, this specific case is about legal and reputational exposure (her call per Roles above) that a small technical footprint can still carry, not just about the severity label.
 
 **Scope can grow after initial classification.** A report that looks like "one site is down" can turn out to be a months-long compromise across several accounts on shared infrastructure once someone actually looks. Re-classify as facts come in rather than anchoring to the first report, and see "When an Incident Outgrows Routine Response" below for what to do when it does.
 
@@ -94,9 +112,10 @@ Some incidents stop being a same-day fix and become a sustained, multi-week inve
 
 ## Communication
 
-- **Internal, Critical/High severity:** Security Officer opens a dedicated thread/channel for the incident so the timeline stays in one place, and pulls in Nicole and the relevant PM immediately.
-- **Internal, Medium/Low severity:** handled in the normal reporting channel; logged for the monthly audit.
-- **Client-facing:** Nicole and the project's PM/lead own the content and timing of any client communication. The Security Officer's role is to provide the technical facts (what happened, what's affected, what's been done), not to draft or send client-facing messages directly.
+- **Internal, Critical severity:** Security Officer opens a dedicated thread/channel for the incident so the timeline stays in one place, and notifies Nicole directly and immediately, alongside the relevant PM.
+- **Internal, High severity:** Security Officer notifies the relevant PM/project lead first, that's the default escalation path. Nicole is looped in when the PM or Security Officer needs her resourcing, legal, or client-facing call, not as a default on every High-severity report.
+- **Internal, Medium/Low severity:** handled in the normal reporting channel; the PM is informed if it's their project; logged for the monthly audit. Nicole isn't involved by default at this severity.
+- **Client-facing:** the PM/lead for the affected project owns the content and timing of client communication, with Nicole's sign-off for anything with legal or reputational exposure. The Security Officer's role is to provide the technical facts (what happened, what's affected, what's been done), not to draft or send client-facing messages directly.
 - **Client-owned credentials:** if the client holds the credential themselves (not Offshorly), remind them to rotate it as part of the incident, same as the existing monthly-report reminder cadence in the Security Policy.
 
 ---
@@ -106,6 +125,11 @@ Some incidents stop being a same-day fix and become a sustained, multi-week inve
 ### A. Account or Credential Compromise
 
 **Trigger:** suspicious login, a leaked credential, a phishing victim who entered credentials, or any other confirmed/suspected unauthorized access to an account.
+
+**At a glance**
+- **Who acts:** Ali, Ivy, or Nicole (the admins with console access) perform the reset; John advises if needed.
+- **Typical severity:** High. Critical if MFA was bypassed, not just the password.
+- **Core actions:** freeze/revoke the session &rarr; rotate the credential and anything it could reach in Vault &rarr; check for persistence (Application/App Passwords, extensions, forwarding rules) &rarr; check for credential reuse elsewhere.
 
 1. Identify scope: which account, and which systems that account (or its Vault entry) can reach.
 2. **Before changing anything, note what's currently there**: active sessions, logged-in devices, and (for a WordPress account) any Application Passwords on the user. Rotating the password first and looking later has already cost a real investigation the ability to tell how an attacker got in.
@@ -125,17 +149,28 @@ Some incidents stop being a same-day fix and become a sustained, multi-week inve
 
 Expands the Security Policy's "Lost or Stolen Devices" section into concrete steps.
 
-1. Report immediately via the chat DM or `infosecadmin@offshorly.com`. Don't wait to confirm the device is truly gone.
-2. List every work session known to be active on the device (Google Workspace, Zoho Vault, client systems, GitHub, chat apps).
-3. Security Officer (or John, if unavailable) force-logs-out each listed session from the admin side. See Runbook E for the Google Workspace and Zoho specific steps.
-4. If the device has remote wipe/lock available and configured (e.g. Find My, Android device manager) and holds company data, trigger it. **Note:** device management is currently self-attested only, not centrally enforced by Offshorly, so this step depends on whatever the employee personally has set up. Closing that gap is tracked as a prevention item, not solved by this plan.
-5. Rotate any credential that was visible or auto-filled on the device (browser-saved passwords), not just the account-level passwords already covered in step 3.
-6. If the device is later recovered, don't trust it as clean. Re-authenticate all sessions fresh rather than assuming recovery means the sessions were never touched.
-7. Close out once the employee confirms all sessions are re-authenticated; log the incident.
+**At a glance**
+- **Who acts:** the employee first, on their own end, if they still can; then Ali, Ivy, or Nicole (the admins) for the account-side reset. John doesn't typically handle this.
+- **Typical severity:** High.
+- **Core actions:** remove the device's own access if still possible &rarr; report immediately &rarr; force-log-out every session it had &rarr; rotate anything exposed &rarr; never trust a "recovered" device without re-authenticating everything.
+
+1. **First things first, on the employee's own end, if still possible:** sign out of accounts on the device remotely, trigger the device's own remote lock (Find My iPhone, Find My Device, or similar) from another device, or physically retrieve and secure it if it's simply misplaced nearby, whichever is fastest and still available. This doesn't replace the admin-side steps below, it just closes the gap while they're getting done.
+2. Report immediately via the chat DM or `infosecadmin@offshorly.com`. Don't wait to confirm the device is truly gone, and don't wait until step 1 is finished either, report and self-remove in parallel.
+3. List every work session known to be active on the device (Google Workspace, Zoho Vault, client systems, GitHub, chat apps).
+4. **Ali, Ivy, or Nicole** (the admins with console access, see the Roles note above) force-log out each listed session from the admin side. See Runbook E for the Google Workspace and Zoho specific steps.
+5. If the device has remote wipe/lock available and configured (e.g. Find My, Android device manager) and holds company data, trigger it from the admin side too if step 1 didn't already cover it. **Note:** device management is currently self-attested only, not centrally enforced by Offshorly, so this step depends on whatever the employee personally has set up. Closing that gap is tracked as a prevention item, not solved by this plan.
+6. Rotate any credential that was visible or auto-filled on the device (browser-saved passwords), not just the account-level passwords already covered in step 4.
+7. If the device is later recovered, don't trust it as clean. Re-authenticate all sessions fresh rather than assuming recovery means the sessions were never touched.
+8. Close out once the employee confirms all sessions are re-authenticated; log the incident.
 
 ### C. WordPress Site Compromise or Security Alert Escalation
 
 **Trigger:** a security-plugin alert (Wordfence, file-change monitor, BlogVault, MalCare, or whichever tool the site uses) that looks like more than routine blocked-scan traffic: a new vulnerability disclosure, malware or file-change detection, or a WAF block-rate spike well above that site's normal baseline.
+
+**At a glance**
+- **Who acts:** whoever monitors that site (Ali or the assigned CMS dev) triages; the CMS team patches disclosed-but-unexploited vulnerabilities directly.
+- **Typical severity:** High if compromise is confirmed, Medium if it's a disclosure or an alert that needs a closer look, Low if it's routine scan noise.
+- **Core actions:** check if other sites on the same host/codebase are affected &rarr; preserve a snapshot &rarr; rotate credentials &rarr; contain (maintenance mode) &rarr; remove the cause &rarr; re-scan clean &rarr; confirm 2FA is actually enforced before closing out.
 
 1. **First-line triage** (currently manual, per-site, done by whoever monitors that site, usually Ali or the assigned CMS dev): security-tool alerts (Wordfence, BlogVault, MalCare, and similar) land in `infosec@offshorly.com`, and distinguishing routine blocked-scan noise from something that needs action is currently a human reading that inbox, not an automated process. **Note:** an automated, aggregated triage flow across all monitored sites doesn't exist yet; this is tracked as an open prevention item.
 2. **Check whether this site shares infrastructure or a codebase with others** before assuming the incident is contained to the one reported site: the same hosting account, the same shared theme/codebase, or a shared/reused admin credential all mean other sites are potentially affected too. Compromises have previously spread silently across multiple domains on one shared host this way.
@@ -236,6 +271,11 @@ Same caveat as the AWS section: a generic skeleton, not yet checked against Offs
 
 **Trigger:** an employee reports a suspicious message, or reports having clicked a link, opened an attachment, or entered credentials.
 
+**At a glance**
+- **Who acts:** the Security Officer reviews every report; falls into Runbook A or B the moment credentials or a device are actually involved.
+- **Typical severity:** Medium if only reported, High the moment credentials were entered or an attachment was opened.
+- **Core actions:** credentials entered &rarr; treat as Runbook A immediately. Attachment opened &rarr; scan the device. Received only &rarr; warn others if it looks targeted. Log every report either way.
+
 1. **If credentials or an MFA code were entered:** treat immediately as an Account or Credential Compromise (Runbook A). Don't wait for further review.
 2. **If a message was only received, not actioned:** the Security Officer reviews it and, if it looks like a targeted or company-wide campaign, warns other staff with the sender/domain pattern via the company chat app.
 3. **If an attachment was opened:** treat the device as potentially compromised. Run an AV/EDR scan, and consider the session-rotation steps from Runbook B as a precaution if anything suspicious follows.
@@ -248,6 +288,11 @@ Same caveat as the AWS section: a generic skeleton, not yet checked against Offs
 **Standing readiness, not just recovery:** 2FA is required org-wide; every employee should keep two sign-in methods active (an authenticator app and SMS), check anytime via Google Account → Security → How you sign in to Google. Backup codes are issued at onboarding and should be saved somewhere safe, away from the sign-in device itself, since they're what makes self-recovery possible without waiting on an admin.
 
 **A recovery request is a known social engineering vector.** Never verify identity from the requesting channel alone (an email claiming to be someone locked out is exactly what an attacker would send); confirm via a second channel (video call, a known personal number, or the person's Team Lead) before any reset action.
+
+**At a glance**
+- **Who acts:** Ali, Ivy, or Nicole perform the admin-side reset. John doesn't handle this.
+- **Typical severity:** Low for a plain forgotten password; same severity as Runbook A or B the moment a device, authenticator, or suspected compromise is involved.
+- **Core actions:** verify identity through a second channel &rarr; contain first if a device/compromise is involved &rarr; reset password, sessions, and backup codes &rarr; sweep for persistence &rarr; confirm with the employee before closing out.
 
 **Employee side, work through in order:**
 1. Email `infosecadmin@offshorly.com` immediately, from any working channel (personal email, chat, SMS, or via your Team Lead) if your work email itself is what's affected, naming the affected account and what happened. Don't wait to confirm.
@@ -296,7 +341,8 @@ Same caveat as the AWS section: a generic skeleton, not yet checked against Offs
 | If you... | Then... |
 |---|---|
 | Forgot your email password, or need backup codes | Contact HR/Admin |
-| Lost a device or authenticator | Email `infosecadmin@offshorly.com` immediately |
+| Lost your authenticator app, but still have the device itself | Email `infosecadmin@offshorly.com` immediately |
+| Lost or had the device itself stolen | See Runbook B first, remove access on your own end if you still can, then report |
 | Forgot your Zoho password | Contact HR/Admin |
 | Can't complete Zoho MFA (OneAuth) | Try your passphrase, then backup codes, then escalate to HR/Admin or the Security Officer |
 | Suspect your account is compromised | Email `infosecadmin@offshorly.com` immediately |
