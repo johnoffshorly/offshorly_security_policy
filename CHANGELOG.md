@@ -5,6 +5,12 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [IR Plan v0.8] - 2026-10-14
+### Changed
+- **Removed repeated "John doesn't handle this" / "Nicole isn't involved by default" phrasing.** v0.7's fixes for who performs account resets and how escalation routes restated the negative (who doesn't do something) in nearly every place it touched: Roles, Runbook B's and Runbook E's "at a glance," and both Communication bullets. Trimmed to one authoritative statement (the "Who actually resets an account" note under Roles) and plain positive statements everywhere else ("Ali, Ivy, or Nicole perform the reset"), rather than restating the exclusion each time.
+
+---
+
 ## [IR Plan v0.7] - 2026-10-14
 ### Added
 - **New Definitions section**, a plain-language glossary for recurring technical terms (rotate, revoke/force-log-out, isolate/contain, persistence mechanism, preserve/snapshot, eradicate, severity/classify), for readers who aren't deep technical users but do perform these actions (Ivy, Nicole).

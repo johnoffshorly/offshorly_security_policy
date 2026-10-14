@@ -1,5 +1,5 @@
 # Offshorly Incident Response Plan
-**Version:** 0.7 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** October 14, 2026
+**Version:** 0.8 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** October 14, 2026
 
 ---
 
@@ -42,8 +42,8 @@ Offshorly's day-to-day security work is done by an informal team of four, each w
 | Role | Person | Responsibility during an incident |
 |---|---|---|
 | **Security Officer / Incident Commander** | Ali | Owns triage and severity classification. Coordinates containment and recovery. Runs the post-incident review. Is the default point of contact for the reporting channel below. Holds admin access for account resets (see note below). |
-| **IR Backup / Technical Advisor** | John | Steps in when Ali is unreachable or unavailable, as a technical advisor: forensic reasoning, infrastructure/hosting decisions, and a second opinion on containment calls. Does not typically perform the account-reset actions in Runbook E himself, see the note below. |
-| **General Manager** | Nicole | Direct escalation contact for Critical-severity incidents. Business-side decisions during an incident: resourcing, prioritization against client work, and any client- or public-facing communication. Final call on anything with legal or reputational exposure (see Open Items). Looped in on High-severity incidents when the PM or Security Officer needs her resourcing, legal, or client-facing call, not as a default first contact. Holds admin access for account resets (see note below). |
+| **IR Backup / Technical Advisor** | John | Steps in when Ali is unreachable or unavailable, as a technical advisor: forensic reasoning, infrastructure/hosting decisions, and a second opinion on containment calls (see the note below for account resets specifically). |
+| **General Manager** | Nicole | Direct escalation contact for Critical-severity incidents. Business-side decisions during an incident: resourcing, prioritization against client work, and any client- or public-facing communication. Final call on anything with legal or reputational exposure (see Open Items). Looped in on High-severity incidents when the PM or Security Officer needs her resourcing, legal, or client-facing call. Holds admin access for account resets (see note below). |
 | **HR** | Ivy | Personnel-side actions: offboarding-related compromises, coordinating with the affected employee, anything that touches employment status. Holds admin access for account resets (see note below). |
 | **CMS Dev Team** | Project-assigned devs | First line of detection and action for WordPress vulnerabilities and site alerts on projects they maintain. Apply fixes directly within their available capacity (existing practice); escalate to the Security Officer when a fix is out of capacity, the site is unmaintained, or a compromise (not just a disclosed vulnerability) is suspected. |
 | **PM / Project Lead** | Varies | First point of contact for a Medium- or High-severity incident on their own project: kept informed, coordinates client-facing comms, and is who the Security Officer escalates to by default. Also the fallback point when the Security Officer and Management are both unreachable (per the Security Policy's reporting channel). |
@@ -113,8 +113,8 @@ Some incidents stop being a same-day fix and become a sustained, multi-week inve
 ## Communication
 
 - **Internal, Critical severity:** Security Officer opens a dedicated thread/channel for the incident so the timeline stays in one place, and notifies Nicole directly and immediately, alongside the relevant PM.
-- **Internal, High severity:** Security Officer notifies the relevant PM/project lead first, that's the default escalation path. Nicole is looped in when the PM or Security Officer needs her resourcing, legal, or client-facing call, not as a default on every High-severity report.
-- **Internal, Medium/Low severity:** handled in the normal reporting channel; the PM is informed if it's their project; logged for the monthly audit. Nicole isn't involved by default at this severity.
+- **Internal, High severity:** Security Officer notifies the relevant PM/project lead first, that's the default escalation path. Nicole is looped in when the PM or Security Officer needs her resourcing, legal, or client-facing call.
+- **Internal, Medium/Low severity:** handled in the normal reporting channel; the PM is informed if it's their project; logged for the monthly audit.
 - **Client-facing:** the PM/lead for the affected project owns the content and timing of client communication, with Nicole's sign-off for anything with legal or reputational exposure. The Security Officer's role is to provide the technical facts (what happened, what's affected, what's been done), not to draft or send client-facing messages directly.
 - **Client-owned credentials:** if the client holds the credential themselves (not Offshorly), remind them to rotate it as part of the incident, same as the existing monthly-report reminder cadence in the Security Policy.
 
@@ -150,7 +150,7 @@ Some incidents stop being a same-day fix and become a sustained, multi-week inve
 Expands the Security Policy's "Lost or Stolen Devices" section into concrete steps.
 
 **At a glance**
-- **Who acts:** the employee first, on their own end, if they still can; then Ali, Ivy, or Nicole (the admins) for the account-side reset. John doesn't typically handle this.
+- **Who acts:** the employee first, on their own end, if they still can; then Ali, Ivy, or Nicole (the admins) for the account-side reset.
 - **Typical severity:** High.
 - **Core actions:** remove the device's own access if still possible &rarr; report immediately &rarr; force-log-out every session it had &rarr; rotate anything exposed &rarr; never trust a "recovered" device without re-authenticating everything.
 
@@ -290,7 +290,7 @@ Same caveat as the AWS section: a generic skeleton, not yet checked against Offs
 **A recovery request is a known social engineering vector.** Never verify identity from the requesting channel alone (an email claiming to be someone locked out is exactly what an attacker would send); confirm via a second channel (video call, a known personal number, or the person's Team Lead) before any reset action.
 
 **At a glance**
-- **Who acts:** Ali, Ivy, or Nicole perform the admin-side reset. John doesn't handle this.
+- **Who acts:** Ali, Ivy, or Nicole perform the admin-side reset.
 - **Typical severity:** Low for a plain forgotten password; same severity as Runbook A or B the moment a device, authenticator, or suspected compromise is involved.
 - **Core actions:** verify identity through a second channel &rarr; contain first if a device/compromise is involved &rarr; reset password, sessions, and backup codes &rarr; sweep for persistence &rarr; confirm with the employee before closing out.
 
