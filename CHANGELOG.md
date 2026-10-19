@@ -5,6 +5,16 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [IR Plan v0.9] - 2026-10-19
+### Changed
+- **Runbook C step 1 now describes automated alert triage instead of a manual inbox read.** An automated tool (Google Apps Script, repo gitlab.com/offshorly-cms/infosec-siem) grades every alert sent to `infosec@offshorly.com`, logs it to the "InfoSec SIEM Log" sheet with a triage Status column, posts CRITICAL/HIGH alerts on Monthly Report sites to `#infosec-alerts` in Cliq, and posts a 09:00 Manila daily digest there. The step makes clear the tool narrows down what needs attention but a person still makes the call.
+- **Added the priority-site rule.** Sites tagged "Monthly Report" in BlogVault are worked on straight away; an issue on any other site needs approval before anyone works on it. Reflected in Runbook C's "at a glance" and steps 1 and 4, and in the CMS Dev Team row under Roles. A suspected active compromise on a non-priority site is still reported to the Security Officer immediately; approval governs who spends time fixing it, not whether anyone is told.
+
+### Resolved
+- **Open Item "No automated alert-triage tooling" closed**, with its two remaining limits noted: the tool runs under the Security Officer's Google account, and alerts held in the group's moderation queue aren't triaged until released.
+
+---
+
 ## [IR Plan v0.8] - 2026-10-14
 ### Changed
 - **Removed repeated "John doesn't handle this" / "Nicole isn't involved by default" phrasing.** v0.7's fixes for who performs account resets and how escalation routes restated the negative (who doesn't do something) in nearly every place it touched: Roles, Runbook B's and Runbook E's "at a glance," and both Communication bullets. Trimmed to one authoritative statement (the "Who actually resets an account" note under Roles) and plain positive statements everywhere else ("Ali, Ivy, or Nicole perform the reset"), rather than restating the exclusion each time.
