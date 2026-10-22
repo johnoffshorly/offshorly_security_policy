@@ -1,5 +1,5 @@
 # Offshorly Incident Response Plan
-**Version:** 0.9 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** October 19, 2026
+**Version:** 0.10 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** October 22, 2026
 
 ---
 
@@ -356,6 +356,32 @@ Same caveat as the AWS section: a generic skeleton, not yet checked against Offs
 
 Never share backup codes, passphrases, or one-time codes with anyone. Identity is always verified before any reset.
 
+### F. Platform or Infrastructure Vulnerability Disclosure (e.g. a CVE like PHP2Shell)
+
+**Trigger:** a CVE or security advisory affecting something underneath individual sites, such as the PHP interpreter, the OS, or a hosting platform's own stack, rather than a single site's code. Usually arrives as an email alert, a vendor advisory, or an external report (a scanner, Netcraft/NCSC, a client).
+
+**At a glance**
+- **Who acts:** whoever's available triages by hosting provider, not by site, since one platform-level fix often covers many sites through one action. For a site Offshorly doesn't actively support, notify the owner and give an upgrade estimate instead of patching it yourself.
+- **Typical severity:** High by default for an unauthenticated RCE-class CVE, across every host, until each one is individually confirmed patched; downgrade host by host as each is verified, not all at once.
+- **Core actions:** build or refresh the host inventory &rarr; assign one person per hosting provider, not per site &rarr; verify the actual fix on each host (version AND service restart) &rarr; flag EOL/unsupported platforms that can't be patched in place &rarr; sweep for legacy or former-client sites we still have some trace of &rarr; notify owners of anything we don't actively support &rarr; close out any external reports.
+
+1. Confirm the affected component and the fixed version(s) from the vendor advisory.
+2. Pull the current host/server inventory and assign one person per hosting provider or platform (Cloudways, Kinsta, RunCloud, Plesk, Lightsail, etc.), not one person per site. A platform-level fix usually covers many sites through a single provider action, so organizing by site wastes effort and risks missing the shared cause.
+3. For managed/PaaS hosts (Kinsta, Cloudways): the provider's own status page is a starting point, not proof. Check it, then verify directly on at least one or two hosts afterward rather than trusting the page alone.
+4. For self-managed/VPS hosts (RunCloud, bare servers): expect to have to trigger the update yourself. A provider's "auto-patching" claim does not reliably mean every server has actually received it yet.
+5. **Verify every "patched" host two ways: confirm the patched version is actually installed, and confirm the service (PHP-FPM, Apache, etc.) has been restarted since.** The version check alone is not enough, a host can have the right files on disk and still be running the old, vulnerable process until it restarts.
+6. Flag any host running an End-of-Life OS or an unsupported platform build (an old Bitnami blueprint, an EOL Ubuntu release, etc.) as unable to be patched in place. These need migration, not a patch, and should become their own tracked item rather than sit in limbo marked "pending."
+7. **Sweep for sites Offshorly no longer actively maintains but still has some trace of**: an old GitLab repo, a past hosting account, a DNS record from a previous project. These don't appear on any current client list, so they get missed unless someone deliberately looks for them. Where a contact is still known, make a good-faith effort to let them know, even without an active contract. It costs a few minutes and is the professional thing to do; it is not a billable obligation, and it is not permission to take any action on their site without their say-so, notifying is the extent of it.
+8. For any site Offshorly doesn't actively support, current client or legacy: notify the owner directly with the CVE and a rough upgrade estimate. Don't patch it on their behalf without being asked.
+9. If an external party flagged the issue (a security researcher, a notification service, a worried client), close the loop with them once it's actually fixed, not before.
+10. Log the outcome host by host, not just "handled". A single later sweep is what confirms nothing was missed, and it can only work from a real log.
+
+**Lessons folded in from the first time this ran without the Security Officer present (2026-10-22, PHP2Shell):**
+- "The provider is patching it" is not verification. At least one host stayed vulnerable for hours after everyone assumed it was covered, because nobody had checked that specific host directly.
+- Checking the version number without confirming a service restart can still describe a vulnerable instance as fixed.
+- No single host inventory exists, the list of servers had to be reconstructed from memory mid-incident.
+- Legacy and former-client sites don't show up on any list and get missed unless someone deliberately looks. This response found several only through individual, ad hoc digging (old GitLab repos, DNS matching, a hosting-account sweep), not a planned step.
+
 ---
 
 ## Post-Incident Review
@@ -388,6 +414,7 @@ These are real, acknowledged gaps rather than things this plan pretends to have 
 - **MFA enforcement status is inconsistent between documents.** The Security Policy states centralized MFA management is "under review." The Account Access Recovery guide states 2FA is already enforced organization-wide across Google Workspace and Zoho. One of these is stale; needs confirming which, and updating the other.
 - **Onboarding/offboarding redesign needs to preserve existing security requirements.** HR's roadmap includes standardizing onboarding ("Onboarding 2.0," moving fully to Zoho) and formalizing offboarding. Whatever that redesign lands on needs to keep: official-email enforcement, personal device baseline confirmation, and security training at onboarding (Security Policy §1, Device and Endpoint Security, Security Training); and the Vault credential-ownership transfer to Ivy before access revocation at offboarding (Security Policy §5). Nothing in the roadmap conflicts with these, they're just not mentioned in it yet.
 - **Enterprise-stack hosting (AWS, Azure) sections are a draft, not yet confirmed.** A generic cloud-IR starting outline was added to "Hosting and Stack-Specific Containment" so John isn't starting from a blank page, but it hasn't been checked against how Offshorly's actual AWS/Azure client accounts are structured (single vs. multi-account/subscription, what logging is actually enabled, real IAM/RBAC setup). Treat as unvalidated until John reviews it.
+- **No single, durable inventory of every site or server Offshorly has ever built, hosted, or had access to.** Surfaced concretely during the 2026-10-22 PHP2Shell response (Runbook F): the team had to reconstruct the current host list from memory mid-incident, and separately found several former-client or legacy sites, via old GitLab repos, DNS matching, and a hosting-account sweep, that don't appear on any active client list but that Offshorly still has historical knowledge of or some access to. Without this, every platform-wide vulnerability response starts by rebuilding the list from scratch, and anyone we no longer actively support only gets found if someone happens to go looking. Building and maintaining this inventory is a Security Roadmap prevention item; Runbook F's sweep step is a stopgap, not a fix for the underlying gap.
 
 ---
 

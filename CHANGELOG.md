@@ -5,6 +5,16 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [IR Plan v0.10] - 2026-10-22
+### Added
+- **New Runbook F: Platform or Infrastructure Vulnerability Disclosure**, drawn directly from the PHP2Shell (CVE-2026-109618/109619) response run by the team on 2026-10-22, the first time the IR process ran without the Security Officer present. Covers triaging by hosting provider rather than by site, verifying a fix two ways (version installed AND service restarted), flagging EOL/unsupported platforms for migration instead of in-place patching, sweeping for legacy or former-client sites Offshorly still has some trace of (an old GitLab repo, a past hosting account, a DNS record) and giving them a good-faith heads-up even without an active contract, and closing the loop with any external party who flagged the issue.
+- **New Open Item: no single, durable inventory of every site or server Offshorly has ever built, hosted, or had access to.** The PHP2Shell response had to rebuild the host list from memory mid-incident, and separately found former-client sites only through ad hoc individual digging. Runbook F's sweep step is a stopgap; the actual fix (a maintained inventory) is a Security Roadmap prevention item.
+
+### Rationale
+This was the first real test of the plan running without the Security Officer in the room, and it surfaced gaps the document hadn't accounted for: a vulnerability class this plan had no runbook for (a platform-level CVE, not a single-site compromise or account issue), a verification discipline gap ("the provider says it's patched" isn't the same as confirming it), and a duty-of-care gap toward sites Offshorly no longer actively maintains but still has some lingering connection to. Writing these in while the incident is still fresh, rather than after memory of it fades, is what makes the plan actually reflect how the team behaves under pressure.
+
+---
+
 ## [IR Plan v0.9] - 2026-10-19
 ### Changed
 - **Runbook C step 1 now describes automated alert triage instead of a manual inbox read.** An automated tool (Google Apps Script, repo gitlab.com/offshorly-cms/infosec-siem) grades every alert sent to `infosec@offshorly.com`, logs it to the "InfoSec SIEM Log" sheet with a triage Status column, posts CRITICAL/HIGH alerts on Monthly Report sites to `#infosec-alerts` in Cliq, and posts a 09:00 Manila daily digest there. The step makes clear the tool narrows down what needs attention but a person still makes the call.
