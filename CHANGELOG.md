@@ -5,6 +5,12 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [IR Plan v0.11] - 2026-10-22
+### Corrected
+- **v0.10 wrongly claimed no site/server inventory exists.** It does: the CMS Projects Masterlist (a Google Sheet with ~72 projects, active and inactive, including live/staging URLs, hosting, maintenance status, repo, and Vault credential links). Checked directly, it would have immediately surfaced several of the legacy sites the PHP2Shell response only found through ad hoc digging (Breakmedia, Evolve Therapy, Sourcefit, among others), including Bridge Housing Solutions and Method IT, both already tracked there as active projects. Rewrote Runbook F step 2, step 7, the Lessons, and the corresponding Open Item to reflect this accurately: the real gaps are that nobody thought to check it during the incident, it's missing security-relevant fields (PHP version, server/IP, last-verified date), roughly one project in six has no Maintenance Status recorded, and at least five domains found during the response (toucanai.net, toucango.net, festive.co.uk, conosur.com, quote-builder.co.uk) aren't in it at all.
+
+---
+
 ## [IR Plan v0.10] - 2026-10-22
 ### Added
 - **New Runbook F: Platform or Infrastructure Vulnerability Disclosure**, drawn directly from the PHP2Shell (CVE-2026-109618/109619) response run by the team on 2026-10-22, the first time the IR process ran without the Security Officer present. Covers triaging by hosting provider rather than by site, verifying a fix two ways (version installed AND service restarted), flagging EOL/unsupported platforms for migration instead of in-place patching, sweeping for legacy or former-client sites Offshorly still has some trace of (an old GitLab repo, a past hosting account, a DNS record) and giving them a good-faith heads-up even without an active contract, and closing the loop with any external party who flagged the issue.
