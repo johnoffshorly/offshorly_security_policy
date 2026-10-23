@@ -5,6 +5,87 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [IR Plan v0.11] - 2026-10-22
+### Corrected
+- **v0.10 wrongly claimed no site/server inventory exists.** It does: the CMS Projects Masterlist (a Google Sheet with ~72 projects, active and inactive, including live/staging URLs, hosting, maintenance status, repo, and Vault credential links). Checked directly, it would have immediately surfaced several of the legacy sites the PHP2Shell response only found through ad hoc digging (Breakmedia, Evolve Therapy, Sourcefit, among others), including Bridge Housing Solutions and Method IT, both already tracked there as active projects. Rewrote Runbook F step 2, step 7, the Lessons, and the corresponding Open Item to reflect this accurately: the real gaps are that nobody thought to check it during the incident, it's missing security-relevant fields (PHP version, server/IP, last-verified date), roughly one project in six has no Maintenance Status recorded, and at least five domains found during the response (toucanai.net, toucango.net, festive.co.uk, conosur.com, quote-builder.co.uk) aren't in it at all.
+
+---
+
+## [IR Plan v0.10] - 2026-10-22
+### Added
+- **New Runbook F: Platform or Infrastructure Vulnerability Disclosure**, drawn directly from the PHP2Shell (CVE-2026-109618/109619) response run by the team on 2026-10-22, the first time the IR process ran without the Security Officer present. Covers triaging by hosting provider rather than by site, verifying a fix two ways (version installed AND service restarted), flagging EOL/unsupported platforms for migration instead of in-place patching, sweeping for legacy or former-client sites Offshorly still has some trace of (an old GitLab repo, a past hosting account, a DNS record) and giving them a good-faith heads-up even without an active contract, and closing the loop with any external party who flagged the issue.
+- **New Open Item: no single, durable inventory of every site or server Offshorly has ever built, hosted, or had access to.** The PHP2Shell response had to rebuild the host list from memory mid-incident, and separately found former-client sites only through ad hoc individual digging. Runbook F's sweep step is a stopgap; the actual fix (a maintained inventory) is a Security Roadmap prevention item.
+
+### Rationale
+This was the first real test of the plan running without the Security Officer in the room, and it surfaced gaps the document hadn't accounted for: a vulnerability class this plan had no runbook for (a platform-level CVE, not a single-site compromise or account issue), a verification discipline gap ("the provider says it's patched" isn't the same as confirming it), and a duty-of-care gap toward sites Offshorly no longer actively maintains but still has some lingering connection to. Writing these in while the incident is still fresh, rather than after memory of it fades, is what makes the plan actually reflect how the team behaves under pressure.
+
+---
+
+## [IR Plan v0.9] - 2026-10-19
+### Changed
+- **Runbook C step 1 now describes automated alert triage instead of a manual inbox read.** An automated tool (Google Apps Script, repo gitlab.com/offshorly-cms/infosec-siem) grades every alert sent to `infosec@offshorly.com`, logs it to the "InfoSec SIEM Log" sheet with a triage Status column, posts CRITICAL/HIGH alerts on Monthly Report sites to `#infosec-alerts` in Cliq, and posts a 09:00 Manila daily digest there. The step makes clear the tool narrows down what needs attention but a person still makes the call.
+- **Added the priority-site rule.** Sites tagged "Monthly Report" in BlogVault are worked on straight away; an issue on any other site needs approval before anyone works on it. Reflected in Runbook C's "at a glance" and steps 1 and 4, and in the CMS Dev Team row under Roles. A suspected active compromise on a non-priority site is still reported to the Security Officer immediately; approval governs who spends time fixing it, not whether anyone is told.
+
+### Resolved
+- **Open Item "No automated alert-triage tooling" closed**, with its two remaining limits noted: the tool runs under the Security Officer's Google account, and alerts held in the group's moderation queue aren't triaged until released.
+
+---
+
+## [IR Plan v0.8] - 2026-10-14
+### Changed
+- **Removed repeated "John doesn't handle this" / "Nicole isn't involved by default" phrasing.** v0.7's fixes for who performs account resets and how escalation routes restated the negative (who doesn't do something) in nearly every place it touched: Roles, Runbook B's and Runbook E's "at a glance," and both Communication bullets. Trimmed to one authoritative statement (the "Who actually resets an account" note under Roles) and plain positive statements everywhere else ("Ali, Ivy, or Nicole perform the reset"), rather than restating the exclusion each time.
+
+---
+
+## [IR Plan v0.7] - 2026-10-14
+### Added
+- **New Definitions section**, a plain-language glossary for recurring technical terms (rotate, revoke/force-log-out, isolate/contain, persistence mechanism, preserve/snapshot, eradicate, severity/classify), for readers who aren't deep technical users but do perform these actions (Ivy, Nicole).
+- **"At a glance" summary** at the top of every runbook (A through E): who acts, typical severity, and the core action sequence, before the detailed numbered steps.
+- **New first step in Runbook B:** before anything else, the employee removes access on their own end if still possible (remote sign-out, their own Find My/remote lock, or physically retrieving the device), in parallel with reporting, not instead of it.
+
+### Changed
+- **Escalation re-routed through PMs for anything short of Critical.** Roles, the Restricted-data severity override, and the Communication section all previously routed to Nicole by default. Now: Critical goes to Nicole directly and immediately; High goes to the relevant PM first, with Nicole looped in only when her resourcing/legal/client-facing call is actually needed; Medium/Low stay in the normal channel with the PM informed. Nicole's and the PM's Roles rows updated to match.
+- **Corrected who actually performs an account reset.** John (IR Backup/Technical Advisor) was described as handling session revocation and credential rotation directly; per Ivy, that's actually done by the admins with Google Workspace/Zoho console access (Ali, Ivy, Nicole), not John, whose role is advisory (forensic reasoning, infrastructure decisions). Fixed in Roles (new explicit note), Runbook B, and Runbook E's "at a glance."
+- **De-duplicated lost-device guidance.** The Quick Reference table in Runbook E repeated a generic "lost a device" instruction that overlapped with Runbook B. Split into two distinct, clearly different rows: losing just the authenticator app (device still in hand) stays in Runbook E, losing the device itself now points to Runbook B instead of restating it.
+- **Resolved the reporting-channel Open Item.** `infosecadmin@offshorly.com` and `infosec@offshorly.com` are two intentionally separate addresses, not an inconsistency: `infosecadmin@offshorly.com` is for a person reporting an incident (alongside the existing chat DM to Security Officer + Management), `infosec@offshorly.com` is where automated security-tool alerts from various projects land. Updated the Reporting Channel section, Runbook B, Runbook C's alert-triage step, Runbook E's employee steps and quick-reference table, and Open Items to reflect this.
+
+### Added
+- **Draft AWS and Azure sections** in "Hosting and Stack-Specific Containment," as a starting outline for John rather than a blank page: root/Global Admin compromise (Critical severity, same tier as Google Workspace admin or Zoho Vault master), IAM user/role and Entra ID account compromise, EC2/VM isolation and snapshot-before-terminate, S3/Blob exposure, Secrets Manager/Key Vault rotation, and which logs (CloudTrail, VPC Flow Logs, GuardDuty, Azure Activity Log, Entra sign-in logs) are the forensic source of truth. Explicitly marked as a generic, unvalidated draft, not checked against Offshorly's actual client account structures, pending John's review.
+
+### Changed
+- Flagged "Hosting and Stack-Specific Containment" as CMS/WordPress-only for now; enterprise-stack sections (AWS, Azure, etc.) are pending, John to add those given his background there. Noted inline in that section and added to Open Items.
+
+---
+
+## [IR Plan v0.3] - 2026-09-14
+### Added
+- **New section: "Hosting and Stack-Specific Containment."** Runbook C's steps are the same everywhere; this breaks out what "rotate credentials," "take offline," and "verify clean" actually mean per environment: Cloudways (DigitalOcean, the current standard, per-app isolation, Varnish purge, platform-level access), cPanel/shared hosting (legacy, multi-domain blast radius, no-SSH constraints, the standing fix of migrating off entirely), Vultr + RunCloud, Kinsta and other managed WP hosts (personal-use accounts, platform restore points), Bedrock/Composer-managed vs. vanilla WordPress (how to verify each is actually clean), and shared codebase networks (a fix on one site generally applies to every site on that codebase). Cross-referenced from Runbook C.
+
+---
+
+## [IR Plan v0.2] - 2026-09-14
+### Added
+- **Runbook E: Account Access Recovery (Offshorly Email / Google Workspace, and Zoho).** Merged in from HR's Account Access Recovery guide: the employee-side self-recovery checklist, the admin/Infosec five-phase recovery procedure (verify and contain, recover Google, recover Zoho, sweep for persistence, close out), and a quick-reference table. Cross-referenced from Runbooks A and B, which now point here for the Google/Zoho-specific mechanics instead of describing them generically. Added the explicit principle that an access-recovery request is a known social engineering vector and must be verified through a second channel before any reset.
+- Runbook A's persistence-check step now also names Google App Passwords (not just WordPress Application Passwords) and Gmail-specific persistence (forwarding rules, filters, send-as, delegation) as things that survive a plain password reset.
+- New Open Items, surfaced while merging HR's guide: the reporting channel is inconsistent across documents (this plan's company-chat DM vs. the HR guide's `infosecadmin@offshorly.com`, itself inconsistently written elsewhere in the same guide as `infosec@offshorly.com`); the Security Policy's MFA section says centralized MFA is "under review" while the HR guide asserts it's already enforced org-wide, one of these is stale; and HR's onboarding/offboarding redesign (Onboarding 2.0, on Zoho) needs to explicitly carry forward the existing onboarding and offboarding security requirements, which aren't mentioned in that roadmap yet.
+
+### Rationale
+HR had already written a detailed, Google Workspace/Zoho-specific account recovery procedure that was more concrete than this plan's original generic version of the same steps. Merging it in raises the whole document's operational detail rather than leaving two separate, partially-overlapping procedures to drift apart. The conflicts it surfaced (reporting channel, MFA status) are flagged rather than silently resolved, since they're facts about the org's actual current state that need confirming with HR, not something this document can decide unilaterally.
+
+---
+
+## [IR Plan v0.1] - 2026-09-14
+### Added
+- **New companion document: `INCIDENT_RESPONSE.md`.** The standalone Incident Response Plan that the Security Policy's Incident Response section has referenced since it was written, but that didn't exist as its own document until now. Covers roles and responsibilities (Security Officer as incident commander, John as IR backup/technical advisor, Nicole and Ivy's business/HR roles, the CMS team's front-line role, all-personnel reporting duty), a severity classification scheme (Critical/High/Medium/Low, with an automatic override for Restricted/minors' data), a NIST SP 800-61-aligned lifecycle (Preparation, Detection and Analysis, Containment/Eradication/Recovery, Post-Incident Activity), and four runbooks: Account or Credential Compromise, Lost or Stolen Device, WordPress Site Compromise or Security Alert Escalation, and Phishing Report.
+- The runbooks fold in concrete lessons from the aegisuk.net/Grovepark Design incident: check for persistence mechanisms that survive a password reset (WordPress Application Passwords, malicious browser extensions with session-cookie access, email forwarding rules) before calling an account compromise closed; check for credential reuse across unrelated systems; preserve a snapshot of a compromised site before remediating it; check whether other sites share the same codebase, host, or credential before assuming an incident is contained; audit a live server for security tooling installed outside the git/deploy pipeline before any migration touches it, so a redeploy can't silently drop a WAF or 2FA; check for exposed database dumps in git history or web-served directories; and confirm 2FA is actually enforced, not just installed, before closing out.
+- A "When an Incident Outgrows Routine Response" section, addressing the real capacity/burnout and remediation-funding questions the aegisuk.net incident raised: a sustained incident is flagged to Nicole as a resourcing question rather than absorbed solo, and remediation costs beyond routine maintenance are a leadership funding decision, not the Security Officer's to resolve alone.
+- An honest Open Items list: no legal/regulatory breach-notification process yet, no automated alert-triage tooling across monitored sites yet, device management is self-attested only, and the shared dev-tools account (Ali/Ivy/John) is still an open decision, not yet split or tightened.
+
+### Rationale
+The Security Policy has said "Offshorly maintains an Incident Response Plan" since it was written, without that plan actually existing as a document. Writing it down, and building the runbooks around what has actually gone wrong so far rather than a generic template, closes the most concrete overdue gap identified in the Security Roadmap's first workstream.
+
+---
+
 ## [v0.7] - 2026-07-08
 ### Changed
 - **§2.1 Password Rotation** — introduced a three-tier rotation model. Tier A (mandatory, platform-enforced, 90 days): Google Workspace account password and Zoho Vault master password only — the two accounts where platform-level expiry can actually be enforced. Tier A2 (recommended, 90-day cycle, audit-verified): Microsoft 365, domain registrar, cloud root accounts, financial accounts, CMS admin accounts, and other high-privilege accounts; must be stored in Vault under the **Critical Accounts** policy. Tier B (event-based, no calendar rotation): DB credentials, SSH key-based auth, API keys, deploy tokens, vendor portals, low-privilege accounts.
