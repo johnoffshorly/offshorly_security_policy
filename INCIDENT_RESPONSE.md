@@ -223,7 +223,13 @@ Runbook C's steps are the same everywhere. What "rotate credentials," "take the 
 
 ### Vultr + RunCloud
 
-- Same isolation shape as Cloudways: RunCloud manages a per-app system user on a Vultr droplet. Apply the same logic as the Cloudways section above (per-app credential reset without affecting other apps, server-wide settings apply to every app on the box, revoke the RunCloud panel login itself if that's what's compromised rather than only the one app).
+- **Do not assume per-app isolation.** RunCloud *can* give each app its own system user, but on Offshorly's existing Vultr servers nearly every app runs as the single shared `runcloud` user. On those servers, one compromised app can read and change every other app's files and `.env`/`wp-config.php` database credentials. Treat it like the cPanel case below, not like Cloudways: every app on the server is in scope until each is individually ruled out. Check with `ps -eo user,cmd | grep "php-fpm: pool"` or the app's file owner before deciding which model applies.
+- **Containment:**
+  - Basic auth (an `.htaccess` block in each docroot, enforced by Apache before PHP runs) is the fastest way to cut all public, unauthenticated access to staging apps on a server at once. It blocks pre-auth exploits such as WordPress core chains, not just logins.
+  - To take a single app offline, move its files out of the webroot (to `~/disabled/<app>-<date>/`) and leave a `.htaccess` with `Require all denied`. RunCloud has no per-app "disable" switch. Keep the database for evidence.
+  - Revoke the RunCloud panel login itself if that's what's compromised, rather than only the one app. Server-wide PHP settings apply to every app on the box.
+  - Database credentials for every app on a shared-user server count as exposed if code execution on any one app is confirmed or can't be ruled out.
+- **The standing fix:** one system user per app (new apps created with their own user, existing ones cloned onto one), or move the apps to a server that already isolates them. Same reasoning as the cPanel section.
 
 ### Kinsta and other managed WordPress hosts (personal-use accounts)
 
@@ -234,6 +240,8 @@ Runbook C's steps are the same everywhere. What "rotate credentials," "take the 
 
 - **Bedrock (Roots.io) sites:** WordPress core, plugins, and theme are dependency-managed via `composer.json`/`composer.lock`, the doc root is `web/`, and secrets live in `.env`. Verify a suspected compromise by rebuilding from `composer install` against the committed lock file and diffing the result against the live filesystem, rather than trusting whatever is currently deployed. Before trusting that diff, confirm `.gitignore` doesn't exclude `composer.lock` itself (see Runbook C step 3); if it does, the lock file was never authoritative and the diff will pass cleanly regardless of what's actually live.
 - **Vanilla WordPress (non-Bedrock):** plugins and themes are committed directly into git, doc root is the repo root, no composer layer. Before trusting a pure git-based redeploy or rebuild here, audit the live server directly for anything installed by hand outside git (security plugins, WAF rules, custom login-URL plugins, 2FA). A previous git-based redeploy on this kind of setup went live with none of those, because they were never tracked in the repo to begin with.
+- **Bedrock sites do not get WordPress's forced core security updates.** Bedrock pins `roots/wordpress` in `composer.json`/`composer.lock`, so a core security release is never "handled automatically" for these sites: someone has to bump the version, run `composer update roots/wordpress`, and deploy. When a core vulnerability is disclosed, check the boilerplate repos too, since a vulnerable pinned version there is inherited by every project started from it.
+- **A custom login URL is not a defence on its own.** The login URL is changed per site at deployment, but the boilerplate's default slug stays on any staging copy or boilerplate install that is never deployed, and attackers have found and used it there. Change it on every install, staging included, and don't rely on it in place of patching.
 - Either stack: treat a raw `.sql` database dump found committed in git history, or sitting in a web-served uploads/export directory, as an exposure to close, per Runbook C.
 
 ### Shared codebase networks

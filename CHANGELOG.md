@@ -5,6 +5,18 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [IR Plan v0.12] - 2026-10-27
+### Corrected
+- **The Vultr + RunCloud section claimed per-app isolation like Cloudways. That is wrong for Offshorly's servers.** On SNG Staging Test all 30 apps run as the one shared `runcloud` user, so one compromised app can reach every other app's files and database credentials. The section now treats these servers like the cPanel shared-hosting case (every app in scope until ruled out), adds the containment steps actually used (server-wide basic auth, taking one app offline by moving its files out of the webroot), and names per-app system users or a move to an isolated server as the standing fix.
+
+### Added
+- **Bedrock section: core security updates and login URLs.** Bedrock pins WordPress in composer, so WordPress's forced security auto-updates never reach these sites, and a vulnerable version pinned in a boilerplate is inherited by every project built from it. A custom login URL is not a defence on its own: it is changed per site at deployment, but the boilerplate's default slug remains on staging copies and undeployed boilerplate installs.
+
+### Rationale
+Found during the 2026-10-27 SNG Staging Test incident: one staging app backdoored since June through a valid admin login, plus about 90 backdoor admin accounts on three boilerplate-based staging apps created through the wp2shell WordPress core chain (CVE-2026-63030 + CVE-2026-60137), which their pinned WordPress versions never received the fix for. Attackers also found and logged in through the boilerplate's default login slug, still in place on the two boilerplate staging installs.
+
+---
+
 ## [IR Plan v0.11] - 2026-10-22
 ### Corrected
 - **v0.10 wrongly claimed no site/server inventory exists.** It does: the CMS Projects Masterlist (a Google Sheet with ~72 projects, active and inactive, including live/staging URLs, hosting, maintenance status, repo, and Vault credential links). Checked directly, it would have immediately surfaced several of the legacy sites the PHP2Shell response only found through ad hoc digging (Breakmedia, Evolve Therapy, Sourcefit, among others), including Bridge Housing Solutions and Method IT, both already tracked there as active projects. Rewrote Runbook F step 2, step 7, the Lessons, and the corresponding Open Item to reflect this accurately: the real gaps are that nobody thought to check it during the incident, it's missing security-relevant fields (PHP version, server/IP, last-verified date), roughly one project in six has no Maintenance Status recorded, and at least five domains found during the response (toucanai.net, toucango.net, festive.co.uk, conosur.com, quote-builder.co.uk) aren't in it at all.
