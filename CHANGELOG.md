@@ -5,6 +5,55 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [v0.9] - 2026-11-17
+### Added
+- **Three new rules under Use of AI Tools:**
+  - **Training and data retention:** work use only on plans that do not train on inputs (business, team or enterprise plans, or a personal plan with training switched off).
+  - **Connectors and integrations:** connecting an AI tool to Gmail, Drive, Calendar, Zoho or chat tools gives it access to everything the account can see, so only Security Officer-approved tools may be connected, and only where the client contract allows AI use on that project's data.
+  - **Meeting recorders and note-takers:** only in client meetings the client has agreed to, announced at the start, with recordings kept in an Offshorly account and treated as Confidential.
+
+### Rationale
+The 2026-11-17 review of third-party app access across the BHS project team found AI tools connected to Google accounts on most of the team (including Gmail and Drive connectors) and a meeting recorder connected for four people. The existing AI rules covered what may be pasted, but not which plans may be used, what may be connected, or how meeting recordings are handled.
+
+---
+
+## [v0.8] - 2026-11-17
+### Added
+- **New File Sharing rule under Data Classification and Handling.** Files are shared with named people; "anyone with the link" is only for genuinely public material and needs PM approval for client work; sharing outside Offshorly is limited to named contacts who need the file, for as long as they need it; named client contacts are preferred over shared client accounts; project leads review sharing at project end and when people leave; exceptions are agreed with the PM and Security Officer and recorded.
+- **Records the supporting Google Workspace settings** (set 2026-11-17): new files private to the owner, a warning when sharing outside Offshorly, and the Access Checker limited to named recipients. "Anyone with the link" stays technically allowed until existing client files are moved to named sharing.
+
+### Rationale
+During the 2026-11-16 client allegation review, about 85 of one client's project files turned out to be shared as "anyone with the link", including the core requirements document. Google does not log views by people who open such a link without signing in, so the audit could not rule out outside access. Named sharing makes that question answerable next time.
+
+---
+
+## [IR Plan v0.13] - 2026-11-17
+### Added
+- **New Runbook G: Client Allegation of a Leak or Misuse by Offshorly Personnel.** Covers a client suspecting that someone at Offshorly leaked or misused their material, data, or product ideas, or is behind a competing or look-alike account or business. Nicole owns the response; the Security Officer gathers facts; HR is involved before any staff-facing step. Steps: pin down the real concern, keep it need-to-know, preserve evidence with a log, gather public-source facts (company register, domain and hosting records), map who had access, check sharing and logs quietly before announcing anything to staff, then statements, then a client report that offers joint verification. Includes what the process can and can't show.
+
+### Changed
+- **Version header corrected.** The header still said v0.11 after the v0.12 changes; it now reads v0.13.
+- **Runbook G step 8 now confirms NDAs and contracts instead of collecting signed statements by default,** matching management's decision during the first run. Signed statements remain a management call.
+- **Runbook G lessons extended** with what the first run found: link-shared client files that cannot be audited for anonymous views, shared accounts blocking attribution on both sides, where each check lives in the Google Admin console, and that a leaver check must cover Google, Zoho, Git and client platform user lists.
+- **Runbook E step 9 now names Offshorly's actual Zoho admin location** (Zoho Projects Plus admin panel: Projects > Settings gear > Directory > Users). The previous wording pointed at Zoho One or Zoho Directory, which Offshorly does not use for user management.
+
+### Rationale
+First raised on 2026-11-16, when a platform client asked whether Offshorly staff were behind a newly registered competitor with a near-identical pitch. The plan had no runbook for an allegation against Offshorly's own people. The case showed that the order of steps matters: checking sharing and logs before telling staff preserves evidence, and having the client pull or co-review its own logs makes the findings credible to them.
+
+---
+
+## [IR Plan v0.12] - 2026-10-27
+### Corrected
+- **The Vultr + RunCloud section claimed per-app isolation like Cloudways. That is wrong for Offshorly's servers.** On SNG Staging Test all 30 apps run as the one shared `runcloud` user, so one compromised app can reach every other app's files and database credentials. The section now treats these servers like the cPanel shared-hosting case (every app in scope until ruled out), adds the containment steps actually used (server-wide basic auth, taking one app offline by moving its files out of the webroot), and names per-app system users or a move to an isolated server as the standing fix.
+
+### Added
+- **Bedrock section: core security updates and login URLs.** Bedrock pins WordPress in composer, so WordPress's forced security auto-updates never reach these sites, and a vulnerable version pinned in a boilerplate is inherited by every project built from it. A custom login URL is not a defence on its own: it is changed per site at deployment, but the boilerplate's default slug remains on staging copies and undeployed boilerplate installs.
+
+### Rationale
+Found during the 2026-10-27 SNG Staging Test incident: one staging app backdoored since June through a valid admin login, plus about 90 backdoor admin accounts on three boilerplate-based staging apps created through the wp2shell WordPress core chain (CVE-2026-63030 + CVE-2026-60137), which their pinned WordPress versions never received the fix for. Attackers also found and logged in through the boilerplate's default login slug, still in place on the two boilerplate staging installs.
+
+---
+
 ## [IR Plan v0.11] - 2026-10-22
 ### Corrected
 - **v0.10 wrongly claimed no site/server inventory exists.** It does: the CMS Projects Masterlist (a Google Sheet with ~72 projects, active and inactive, including live/staging URLs, hosting, maintenance status, repo, and Vault credential links). Checked directly, it would have immediately surfaced several of the legacy sites the PHP2Shell response only found through ad hoc digging (Breakmedia, Evolve Therapy, Sourcefit, among others), including Bridge Housing Solutions and Method IT, both already tracked there as active projects. Rewrote Runbook F step 2, step 7, the Lessons, and the corresponding Open Item to reflect this accurately: the real gaps are that nobody thought to check it during the incident, it's missing security-relevant fields (PHP version, server/IP, last-verified date), roughly one project in six has no Maintenance Status recorded, and at least five domains found during the response (toucanai.net, toucango.net, festive.co.uk, conosur.com, quote-builder.co.uk) aren't in it at all.

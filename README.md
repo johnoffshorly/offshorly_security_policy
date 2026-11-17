@@ -1,5 +1,5 @@
 # Offshorly Security Policy
-**Version:** 0.7 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** July 8, 2026
+**Version:** 0.9 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** November 17, 2026
 
 ---
 
@@ -210,6 +210,18 @@ Offshorly maintains an Incident Response Plan outlining escalation procedures an
 - Data must be categorized as Public, Internal, Confidential, or Restricted.
 - Confidential and Restricted data must be encrypted and shared only with authorized individuals, using secure channels.
 
+#### File Sharing (Google Drive and Other Cloud Storage)
+New files in Offshorly's Google Drive are private to the owner by default. When sharing files and folders, including client project files:
+
+- **Share with named people.** Add the specific people who need access, at Offshorly or at the client.
+- **No "anyone with the link" for Internal, Confidential, or Restricted material.** Link sharing is only for material that is genuinely Public, such as a published brochure. For client work, it needs the PM's approval. Google does not log views by people who open a shared link without signing in, so link-shared files leave no record of who read them.
+- **Sharing outside Offshorly is the exception.** Share outside only with named client or partner contacts who need the file for the work, and only for as long as they need it. Drive shows a warning when you share outside Offshorly; check the recipient before confirming.
+- **Prefer named client contacts over shared client accounts** (for example a client's generic developer@ or reporting@ address), because access through a shared account cannot be traced to a person.
+- **Review sharing at the end of a project and when people leave.** The project lead checks sharing on the project's files when the project ends and when someone leaves the project or the client, and removes access that is no longer needed.
+- **Exceptions** (for example, a client who cannot use Google accounts) are agreed with the PM and the Security Officer, and recorded.
+
+Admin settings supporting this rule (set 17 November 2026): new files are private to the owner, Drive warns when files are shared outside Offshorly, and the Access Checker only offers to share with the named recipients. "Anyone with the link" is still technically allowed while existing client files are moved to named sharing; switching it off is planned once that is done, after checking which client links are still in use.
+
 ### Device and Endpoint Security
 
 #### Personal Device Baseline (Mandatory)
@@ -254,6 +266,9 @@ AI assistants (e.g., ChatGPT, Claude, Copilot, Gemini) are permitted for work us
 - **Offshorly-internal code and data:** AI tools may be used freely, provided the credential rule above is respected.
 - **Output review:** Anything produced by an AI tool must be reviewed for correctness, license compliance, and security before it is committed, shipped, or shared with a client.
 - **Tool accounts:** AI tool accounts used for work must be registered under an Offshorly email (per §1).
+- **Training and data retention:** Use AI tools for work only on plans that do not train on your inputs: business, team, or enterprise plans, or a personal plan with model training explicitly switched off. Free and consumer plans may use what you paste to train their models. Check this before pasting any client or project material.
+- **Connectors and integrations:** Connecting an AI tool to Offshorly accounts (Gmail, Google Drive, Calendar, Zoho, chat tools) gives it access to everything those accounts can see, including client files. Only connect AI tools that the Security Officer has approved, and only where the client contract allows AI use on that project's data. Remove connections you no longer use (Google Account > Security > Third-party apps and services).
+- **Meeting recorders and note-takers** (e.g., Fireflies, Fathom, Otter): use them in client meetings only when the client has agreed, announce the recording at the start, and keep recordings in an Offshorly account. Recordings and transcripts are Confidential data.
 
 ### Security Training and Awareness
 - Security training is mandatory upon onboarding and repeated every six months.

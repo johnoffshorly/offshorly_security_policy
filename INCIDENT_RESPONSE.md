@@ -1,5 +1,5 @@
 # Offshorly Incident Response Plan
-**Version:** 0.11 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** October 22, 2026
+**Version:** 0.13 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** November 17, 2026
 
 ---
 
@@ -223,7 +223,13 @@ Runbook C's steps are the same everywhere. What "rotate credentials," "take the 
 
 ### Vultr + RunCloud
 
-- Same isolation shape as Cloudways: RunCloud manages a per-app system user on a Vultr droplet. Apply the same logic as the Cloudways section above (per-app credential reset without affecting other apps, server-wide settings apply to every app on the box, revoke the RunCloud panel login itself if that's what's compromised rather than only the one app).
+- **Do not assume per-app isolation.** RunCloud *can* give each app its own system user, but on Offshorly's existing Vultr servers nearly every app runs as the single shared `runcloud` user. On those servers, one compromised app can read and change every other app's files and `.env`/`wp-config.php` database credentials. Treat it like the cPanel case below, not like Cloudways: every app on the server is in scope until each is individually ruled out. Check with `ps -eo user,cmd | grep "php-fpm: pool"` or the app's file owner before deciding which model applies.
+- **Containment:**
+  - Basic auth (an `.htaccess` block in each docroot, enforced by Apache before PHP runs) is the fastest way to cut all public, unauthenticated access to staging apps on a server at once. It blocks pre-auth exploits such as WordPress core chains, not just logins.
+  - To take a single app offline, move its files out of the webroot (to `~/disabled/<app>-<date>/`) and leave a `.htaccess` with `Require all denied`. RunCloud has no per-app "disable" switch. Keep the database for evidence.
+  - Revoke the RunCloud panel login itself if that's what's compromised, rather than only the one app. Server-wide PHP settings apply to every app on the box.
+  - Database credentials for every app on a shared-user server count as exposed if code execution on any one app is confirmed or can't be ruled out.
+- **The standing fix:** one system user per app (new apps created with their own user, existing ones cloned onto one), or move the apps to a server that already isolates them. Same reasoning as the cPanel section.
 
 ### Kinsta and other managed WordPress hosts (personal-use accounts)
 
@@ -234,6 +240,8 @@ Runbook C's steps are the same everywhere. What "rotate credentials," "take the 
 
 - **Bedrock (Roots.io) sites:** WordPress core, plugins, and theme are dependency-managed via `composer.json`/`composer.lock`, the doc root is `web/`, and secrets live in `.env`. Verify a suspected compromise by rebuilding from `composer install` against the committed lock file and diffing the result against the live filesystem, rather than trusting whatever is currently deployed. Before trusting that diff, confirm `.gitignore` doesn't exclude `composer.lock` itself (see Runbook C step 3); if it does, the lock file was never authoritative and the diff will pass cleanly regardless of what's actually live.
 - **Vanilla WordPress (non-Bedrock):** plugins and themes are committed directly into git, doc root is the repo root, no composer layer. Before trusting a pure git-based redeploy or rebuild here, audit the live server directly for anything installed by hand outside git (security plugins, WAF rules, custom login-URL plugins, 2FA). A previous git-based redeploy on this kind of setup went live with none of those, because they were never tracked in the repo to begin with.
+- **Bedrock sites do not get WordPress's forced core security updates.** Bedrock pins `roots/wordpress` in `composer.json`/`composer.lock`, so a core security release is never "handled automatically" for these sites: someone has to bump the version, run `composer update roots/wordpress`, and deploy. When a core vulnerability is disclosed, check the boilerplate repos too, since a vulnerable pinned version there is inherited by every project started from it.
+- **A custom login URL is not a defence on its own.** The login URL is changed per site at deployment, but the boilerplate's default slug stays on any staging copy or boilerplate install that is never deployed, and attackers have found and used it there. Change it on every install, staging included, and don't rely on it in place of patching.
 - Either stack: treat a raw `.sql` database dump found committed in git history, or sitting in a web-served uploads/export directory, as an exposure to close, per Runbook C.
 
 ### Shared codebase networks
@@ -328,7 +336,7 @@ Same caveat as the AWS section: a generic skeleton, not yet checked against Offs
 8. Unsuspend the account, then walk the employee through re-enrollment: new authenticator, confirmed SMS number, new backup codes saved.
 
 *Phase 3, recover Zoho:*
-9. Use the Admin Panel (Zoho One / Zoho Directory) to reset the user's password or MFA. This depends on the org's email domain staying verified in Zoho, don't let that verification lapse.
+9. Use the Zoho admin panel to reset the user's password or MFA. Offshorly's is the Zoho Projects Plus admin panel (Projects > Settings gear > Directory > Users); Offshorly does not use Zoho One, and admin.zoho.com is not the right place. This depends on the org's email domain staying verified in Zoho, don't let that verification lapse.
 10. Prefer self-recovery through the employee's OneAuth passphrase or backup verification codes before doing an admin-side MFA reset.
 11. If there's no passphrase, no backup codes, and admin reset fails, escalate to Zoho Support. Infosec owns this contact; employees should not raise tickets with Zoho directly.
 12. Once recovered, the employee reconfigures OneAuth, sets a new passphrase, and generates a fresh set of backup codes.
@@ -381,6 +389,40 @@ Never share backup codes, passphrases, or one-time codes with anyone. Identity i
 - Checking the version number without confirming a service restart can still describe a vulnerable instance as fixed.
 - A project masterlist already existed (the CMS Projects Masterlist, a Google Sheet listing active and inactive projects) but nobody thought to check it, the host list was instead reconstructed from memory. Checking it would have immediately surfaced several of the legacy sites this response only found later through ad hoc digging (Breakmedia, Evolve Therapy, Sourcefit, among others).
 - The masterlist still isn't a complete answer. At least five of today's confirmed-exposed domains (toucanai.net, toucango.net, festive.co.uk, conosur.com, quote-builder.co.uk) aren't in it at all, and roughly one project in six has no Maintenance Status recorded, so "it's in the masterlist" doesn't by itself mean "it's covered." It also has no PHP version, server, or last-verified columns, so it narrows the search, it doesn't replace checking each host directly.
+
+### G. Client Allegation of a Leak or Misuse by Offshorly Personnel
+
+**Trigger:** a client (or anyone else) suspects that someone at Offshorly leaked, copied, or misused their confidential material, data, or product ideas, or is behind an account, website, or business that looks like it uses them. For example, a new competitor appears with a very similar product, or a profile appears that seems to borrow the client's work.
+
+**At a glance**
+- **Who acts:** Nicole (General Manager) owns the response, since it carries legal, reputational, and client-relationship exposure. The Security Officer gathers the facts. HR (Ivy) is involved before any step that involves staff directly. The PM handles client communication with Nicole's sign-off.
+- **Typical severity:** High by default. Critical if client personal data (Restricted category) appears to be involved.
+- **Core actions:** pin down exactly what is alleged &rarr; preserve evidence &rarr; gather facts from public sources &rarr; map who had access &rarr; check sharing and logs quietly &rarr; HR (and legal if available) &rarr; confirm NDAs and contracts &rarr; report to the client and let them verify &rarr; log and review.
+
+1. **Get the allegation in writing, through the PM.** What exactly did the client see, where, and when, and what makes them think it's us? Ask for everything they have (links, screenshots, documents). The visible trigger (an account, a website) is often not the real concern (an idea or data being taken), and the real concern decides what needs checking.
+2. **Escalate to Nicole the same day and keep it need-to-know:** Nicole, the Security Officer, the PM, and HR. Don't discuss it in project channels or with the wider team. This protects staff who did nothing and avoids tipping off anyone who did.
+3. **Preserve evidence and start a log.** Save the public pages, registry records, domain records, and the client's material, each with the date and time collected. Keep a running log of what was checked, when, by whom, and what was found. If this goes further, that log is what makes the findings credible.
+4. **Gather facts from public sources.** Company registers (in the UK, Companies House: officers, persons with significant control, incorporation date, filing history), domain registration records, DNS, and hosting and email providers, plus what the other party's site and pitch actually say. Compare these against the tools and providers Offshorly uses. View public pages only: don't sign up, log in, or interact with the other party's service, and don't contact them.
+5. **Map who had access.** List everyone who worked on the project, including former staff and contractors: Zoho task owners and creators, Drive and Figma sharing, repository members, hosting accounts, and any accounts on the client's own platform. Zoho shows names but not roles, so confirm roles with the PM.
+6. **Check sharing and logs quietly, before announcing anything to staff.** Read-only: Drive and Figma sharing on the project's files (especially "anyone with the link" and outside addresses), repository collaborators, and account lists on hosting and cloud accounts. If someone did leak something, an announced inquiry gives them time to remove the evidence, such as an outside share on a file. For logs on the client's own platform or cloud account, agree access with the client first, and preferably let the client pull them, or pull them jointly on a call, so the evidence doesn't come only from the party under suspicion. Never log into a client system unannounced during an inquiry: the login itself shows up in the logs being reviewed.
+7. **Involve HR, and legal if available, before any step that involves staff.** Also check what the client contract says about confidentiality and IP, since the client will look at that.
+8. **Confirm NDAs and contracts** cover everyone on the access map (an NDA per person, plus the MSA and SOW with the client). Separate signed statements are not the default: management decides whether they are needed, since they touch employment terms.
+9. **Report to the client through the PM, with Nicole's sign-off:** what was checked, what was found, and what can't be shown. Offer a joint log review, and ask who on the client's side (staff, partners, testers, other vendors, former employees) also knew the details.
+10. **Leave any action against the other party to the client.** Offshorly does not contact them. If the client believes its work was taken, that is for the client and its lawyers.
+11. **Close out:** finish the log, run the post-incident review, and fix any access gaps the review found as separate tracked items.
+
+**What this can and can't show:** it can show who had access, what was shared and with whom, what the logs record, and what each person states. It can't show what someone said in a conversation or remembered, and no log covers that, so be clear with the client about it. Device specifications and operating systems don't help either way.
+
+**Lessons from the first time this ran (2026-11-16):**
+- The visible trigger was a LinkedIn profile and a sign-up site. The real concern was a new competitor selling a product very similar to the platform Offshorly was building for the client, to the same buyers. Pinning down the real concern first changed which checks mattered.
+- The competitor's founder shared a first name with an Offshorly team member, which was likely part of the suspicion. A shared name is not evidence either way, but it's worth naming openly so it doesn't sit unspoken.
+- Public records (company register, domain registration, hosting providers) answered most of "who is this?" within an hour, before anyone on the team needed to be asked anything.
+- The access review turned up an unrelated housekeeping issue (old staging passwords in a Zoho project description, still valid on a staging site). Expect an inquiry to surface things like this, and fix them as separate tasks.
+- About 85 of the client's project files were shared as "anyone with the link". Google does not log views by people who open such a link without signing in, so the audit could show who on our side opened the key document but could not rule out outside access. The File Sharing section of the Security Policy now limits link sharing to genuinely public material.
+- Shared accounts block attribution on both sides: our shared dev@ account and the client's shared developer@ and reporting@ platform accounts. The same review found password guesses and blocked password-change attempts on dev@ from cloud servers.
+- Management chose to rely on per-person NDAs and the client contracts rather than signed statements, and limited the client report to what Offshorly checked plus suggested checks the client can run itself.
+- Where the checks live: Google Admin console > Reporting > Audit and investigation (Drive log events for file access; User log events with "Is suspicious" and event filters for sign-ins; OAuth log events for app grants, excluding routine add-ons such as Zoho Recruit) and Security > Alert center. Zoho user status is in the Zoho Projects Plus admin panel (Projects > Settings gear > Directory > Users), not admin.zoho.com.
+- A leaver check has to cover every system: Google, Zoho, Git, and the client platform's own user lists.
 
 ---
 
