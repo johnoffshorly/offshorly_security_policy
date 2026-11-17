@@ -1,5 +1,5 @@
 # Offshorly Security Policy
-**Version:** 0.7 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** July 8, 2026
+**Version:** 0.8 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** November 17, 2026
 
 ---
 
@@ -209,6 +209,18 @@ Offshorly maintains an Incident Response Plan outlining escalation procedures an
 ### Data Classification and Handling
 - Data must be categorized as Public, Internal, Confidential, or Restricted.
 - Confidential and Restricted data must be encrypted and shared only with authorized individuals, using secure channels.
+
+#### File Sharing (Google Drive and Other Cloud Storage)
+New files in Offshorly's Google Drive are private to the owner by default. When sharing files and folders, including client project files:
+
+- **Share with named people.** Add the specific people who need access, at Offshorly or at the client.
+- **No "anyone with the link" for Internal, Confidential, or Restricted material.** Link sharing is only for material that is genuinely Public, such as a published brochure. For client work, it needs the PM's approval. Google does not log views by people who open a shared link without signing in, so link-shared files leave no record of who read them.
+- **Sharing outside Offshorly is the exception.** Share outside only with named client or partner contacts who need the file for the work, and only for as long as they need it. Drive shows a warning when you share outside Offshorly; check the recipient before confirming.
+- **Prefer named client contacts over shared client accounts** (for example a client's generic developer@ or reporting@ address), because access through a shared account cannot be traced to a person.
+- **Review sharing at the end of a project and when people leave.** The project lead checks sharing on the project's files when the project ends and when someone leaves the project or the client, and removes access that is no longer needed.
+- **Exceptions** (for example, a client who cannot use Google accounts) are agreed with the PM and the Security Officer, and recorded.
+
+Admin settings supporting this rule (set 17 November 2026): new files are private to the owner, Drive warns when files are shared outside Offshorly, and the Access Checker only offers to share with the named recipients. "Anyone with the link" is still technically allowed while existing client files are moved to named sharing; switching it off is planned once that is done, after checking which client links are still in use.
 
 ### Device and Endpoint Security
 

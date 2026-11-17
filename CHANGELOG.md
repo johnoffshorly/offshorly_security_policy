@@ -5,6 +5,31 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [v0.8] - 2026-11-17
+### Added
+- **New File Sharing rule under Data Classification and Handling.** Files are shared with named people; "anyone with the link" is only for genuinely public material and needs PM approval for client work; sharing outside Offshorly is limited to named contacts who need the file, for as long as they need it; named client contacts are preferred over shared client accounts; project leads review sharing at project end and when people leave; exceptions are agreed with the PM and Security Officer and recorded.
+- **Records the supporting Google Workspace settings** (set 2026-11-17): new files private to the owner, a warning when sharing outside Offshorly, and the Access Checker limited to named recipients. "Anyone with the link" stays technically allowed until existing client files are moved to named sharing.
+
+### Rationale
+During the 2026-11-16 client allegation review, about 85 of one client's project files turned out to be shared as "anyone with the link", including the core requirements document. Google does not log views by people who open such a link without signing in, so the audit could not rule out outside access. Named sharing makes that question answerable next time.
+
+---
+
+## [IR Plan v0.13] - 2026-11-17
+### Added
+- **New Runbook G: Client Allegation of a Leak or Misuse by Offshorly Personnel.** Covers a client suspecting that someone at Offshorly leaked or misused their material, data, or product ideas, or is behind a competing or look-alike account or business. Nicole owns the response; the Security Officer gathers facts; HR is involved before any staff-facing step. Steps: pin down the real concern, keep it need-to-know, preserve evidence with a log, gather public-source facts (company register, domain and hosting records), map who had access, check sharing and logs quietly before announcing anything to staff, then statements, then a client report that offers joint verification. Includes what the process can and can't show.
+
+### Changed
+- **Version header corrected.** The header still said v0.11 after the v0.12 changes; it now reads v0.13.
+- **Runbook G step 8 now confirms NDAs and contracts instead of collecting signed statements by default,** matching management's decision during the first run. Signed statements remain a management call.
+- **Runbook G lessons extended** with what the first run found: link-shared client files that cannot be audited for anonymous views, shared accounts blocking attribution on both sides, where each check lives in the Google Admin console, and that a leaver check must cover Google, Zoho, Git and client platform user lists.
+- **Runbook E step 9 now names Offshorly's actual Zoho admin location** (Zoho Projects Plus admin panel: Projects > Settings gear > Directory > Users). The previous wording pointed at Zoho One or Zoho Directory, which Offshorly does not use for user management.
+
+### Rationale
+First raised on 2026-11-16, when a platform client asked whether Offshorly staff were behind a newly registered competitor with a near-identical pitch. The plan had no runbook for an allegation against Offshorly's own people. The case showed that the order of steps matters: checking sharing and logs before telling staff preserves evidence, and having the client pull or co-review its own logs makes the findings credible to them.
+
+---
+
 ## [IR Plan v0.12] - 2026-10-27
 ### Corrected
 - **The Vultr + RunCloud section claimed per-app isolation like Cloudways. That is wrong for Offshorly's servers.** On SNG Staging Test all 30 apps run as the one shared `runcloud` user, so one compromised app can reach every other app's files and database credentials. The section now treats these servers like the cPanel shared-hosting case (every app in scope until ruled out), adds the containment steps actually used (server-wide basic auth, taking one app offline by moving its files out of the webroot), and names per-app system users or a move to an isolated server as the standing fix.
