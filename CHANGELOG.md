@@ -5,6 +5,18 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [v0.9] - 2026-11-17
+### Added
+- **Three new rules under Use of AI Tools:**
+  - **Training and data retention:** work use only on plans that do not train on inputs (business, team or enterprise plans, or a personal plan with training switched off).
+  - **Connectors and integrations:** connecting an AI tool to Gmail, Drive, Calendar, Zoho or chat tools gives it access to everything the account can see, so only Security Officer-approved tools may be connected, and only where the client contract allows AI use on that project's data.
+  - **Meeting recorders and note-takers:** only in client meetings the client has agreed to, announced at the start, with recordings kept in an Offshorly account and treated as Confidential.
+
+### Rationale
+The 2026-11-17 review of third-party app access across the BHS project team found AI tools connected to Google accounts on most of the team (including Gmail and Drive connectors) and a meeting recorder connected for four people. The existing AI rules covered what may be pasted, but not which plans may be used, what may be connected, or how meeting recordings are handled.
+
+---
+
 ## [v0.8] - 2026-11-17
 ### Added
 - **New File Sharing rule under Data Classification and Handling.** Files are shared with named people; "anyone with the link" is only for genuinely public material and needs PM approval for client work; sharing outside Offshorly is limited to named contacts who need the file, for as long as they need it; named client contacts are preferred over shared client accounts; project leads review sharing at project end and when people leave; exceptions are agreed with the PM and Security Officer and recorded.

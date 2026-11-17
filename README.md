@@ -1,5 +1,5 @@
 # Offshorly Security Policy
-**Version:** 0.8 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** November 17, 2026
+**Version:** 0.9 | **Status:** Draft | **Review Cycle:** Monthly | **Date:** November 17, 2026
 
 ---
 
@@ -266,6 +266,9 @@ AI assistants (e.g., ChatGPT, Claude, Copilot, Gemini) are permitted for work us
 - **Offshorly-internal code and data:** AI tools may be used freely, provided the credential rule above is respected.
 - **Output review:** Anything produced by an AI tool must be reviewed for correctness, license compliance, and security before it is committed, shipped, or shared with a client.
 - **Tool accounts:** AI tool accounts used for work must be registered under an Offshorly email (per §1).
+- **Training and data retention:** Use AI tools for work only on plans that do not train on your inputs: business, team, or enterprise plans, or a personal plan with model training explicitly switched off. Free and consumer plans may use what you paste to train their models. Check this before pasting any client or project material.
+- **Connectors and integrations:** Connecting an AI tool to Offshorly accounts (Gmail, Google Drive, Calendar, Zoho, chat tools) gives it access to everything those accounts can see, including client files. Only connect AI tools that the Security Officer has approved, and only where the client contract allows AI use on that project's data. Remove connections you no longer use (Google Account > Security > Third-party apps and services).
+- **Meeting recorders and note-takers** (e.g., Fireflies, Fathom, Otter): use them in client meetings only when the client has agreed, announce the recording at the start, and keep recordings in an Offshorly account. Recordings and transcripts are Confidential data.
 
 ### Security Training and Awareness
 - Security training is mandatory upon onboarding and repeated every six months.
