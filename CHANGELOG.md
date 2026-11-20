@@ -13,7 +13,7 @@ This project follows [Semantic Versioning](https://semver.org/).
   - **Meeting recorders and note-takers:** only in client meetings the client has agreed to, announced at the start, with recordings kept in an Offshorly account and treated as Confidential.
 
 ### Rationale
-The 2026-11-17 review of third-party app access across the BHS project team found AI tools connected to Google accounts on most of the team (including Gmail and Drive connectors) and a meeting recorder connected for four people. The existing AI rules covered what may be pasted, but not which plans may be used, what may be connected, or how meeting recordings are handled.
+The 2026-11-17 review of third-party app access across one client project team found AI tools connected to Google accounts on most of the team (including Gmail and Drive connectors) and a meeting recorder connected for four people. The existing AI rules covered what may be pasted, but not which plans may be used, what may be connected, or how meeting recordings are handled.
 
 ---
 
@@ -24,6 +24,23 @@ The 2026-11-17 review of third-party app access across the BHS project team foun
 
 ### Rationale
 During the 2026-11-16 client allegation review, about 85 of one client's project files turned out to be shared as "anyone with the link", including the core requirements document. Google does not log views by people who open such a link without signing in, so the audit could not rule out outside access. Named sharing makes that question answerable next time.
+
+---
+
+## [IR Plan v0.14] - 2026-11-20
+### Added
+- **Runbook F step 11: "patched is not clean".** When a vulnerability was exploited before the fix reached a site, sweep every site that ran a vulnerable version for signs of compromise (unknown admins, accounts created after disclosure, application passwords, random-named plugins, Code Snippets, PHP in uploads, a changed `admin_email`, deleted-account gaps), on every host including managed ones. Version checks alone can't see an intruder who got in before the patch.
+- **Runbook F step 12 and Post-Incident Review: every open follow-up gets an owner and a due date** in the triage sheet or Zoho.
+- **Runbook F lessons from a client network's wp2shell compromise.**
+- **Runbook C:** sites that don't send alerts to `infosec@` must run the Security Watch plugin or count as unmonitored; check for sites outside the deploy and update process (internal hubs, old public staging copies); user-sync plugins copy accounts between sites; look for database-stored backdoors that file scans miss; lock attacker accounts out first, then delete them once evidence is saved.
+- **Kinsta specifics** under Hosting and Stack-Specific Containment: per-environment SSH, about 4 days of server access logs, file-only malware scans, IP Deny, database password rotation on Bedrock, backups in MyKinsta.
+- **Open Items:** no recurring compromise sweep yet; new-admin alerts only cover one client network so far.
+
+### Changed
+- Version header updated to v0.14.
+
+### Rationale
+On 2026-11-20 wp2shell attacker accounts were found on every site of a client's WordPress network on Kinsta, created in July during the 11 days between the WordPress fix and the sites' update. Every later security check reported the sites as patched, which they were, so nothing looked for the accounts. The 2026-10-27 sweep that found the same campaign on Offshorly's staging servers had left managed hosts as an unscheduled follow-up. The network's internal hub, outside the deploy pipeline, stayed vulnerable and was fully taken over from September to November.
 
 ---
 
@@ -56,7 +73,7 @@ Found during the 2026-10-27 SNG Staging Test incident: one staging app backdoore
 
 ## [IR Plan v0.11] - 2026-10-22
 ### Corrected
-- **v0.10 wrongly claimed no site/server inventory exists.** It does: the CMS Projects Masterlist (a Google Sheet with ~72 projects, active and inactive, including live/staging URLs, hosting, maintenance status, repo, and Vault credential links). Checked directly, it would have immediately surfaced several of the legacy sites the PHP2Shell response only found through ad hoc digging (Breakmedia, Evolve Therapy, Sourcefit, among others), including Bridge Housing Solutions and Method IT, both already tracked there as active projects. Rewrote Runbook F step 2, step 7, the Lessons, and the corresponding Open Item to reflect this accurately: the real gaps are that nobody thought to check it during the incident, it's missing security-relevant fields (PHP version, server/IP, last-verified date), roughly one project in six has no Maintenance Status recorded, and at least five domains found during the response (toucanai.net, toucango.net, festive.co.uk, conosur.com, quote-builder.co.uk) aren't in it at all.
+- **v0.10 wrongly claimed no site/server inventory exists.** It does: the CMS Projects Masterlist (a Google Sheet with ~72 projects, active and inactive, including live/staging URLs, hosting, maintenance status, repo, and Vault credential links). Checked directly, it would have immediately surfaced several of the legacy sites the PHP2Shell response only found through ad hoc digging, including two that were already tracked there as active projects. Rewrote Runbook F step 2, step 7, the Lessons, and the corresponding Open Item to reflect this accurately: the real gaps are that nobody thought to check it during the incident, it's missing security-relevant fields (PHP version, server/IP, last-verified date), roughly one project in six has no Maintenance Status recorded, and at least five domains found during the response  aren't in it at all.
 
 ---
 
@@ -126,8 +143,8 @@ HR had already written a detailed, Google Workspace/Zoho-specific account recove
 ## [IR Plan v0.1] - 2026-09-14
 ### Added
 - **New companion document: `INCIDENT_RESPONSE.md`.** The standalone Incident Response Plan that the Security Policy's Incident Response section has referenced since it was written, but that didn't exist as its own document until now. Covers roles and responsibilities (Security Officer as incident commander, John as IR backup/technical advisor, Nicole and Ivy's business/HR roles, the CMS team's front-line role, all-personnel reporting duty), a severity classification scheme (Critical/High/Medium/Low, with an automatic override for Restricted/minors' data), a NIST SP 800-61-aligned lifecycle (Preparation, Detection and Analysis, Containment/Eradication/Recovery, Post-Incident Activity), and four runbooks: Account or Credential Compromise, Lost or Stolen Device, WordPress Site Compromise or Security Alert Escalation, and Phishing Report.
-- The runbooks fold in concrete lessons from the aegisuk.net/Grovepark Design incident: check for persistence mechanisms that survive a password reset (WordPress Application Passwords, malicious browser extensions with session-cookie access, email forwarding rules) before calling an account compromise closed; check for credential reuse across unrelated systems; preserve a snapshot of a compromised site before remediating it; check whether other sites share the same codebase, host, or credential before assuming an incident is contained; audit a live server for security tooling installed outside the git/deploy pipeline before any migration touches it, so a redeploy can't silently drop a WAF or 2FA; check for exposed database dumps in git history or web-served directories; and confirm 2FA is actually enforced, not just installed, before closing out.
-- A "When an Incident Outgrows Routine Response" section, addressing the real capacity/burnout and remediation-funding questions the aegisuk.net incident raised: a sustained incident is flagged to Nicole as a resourcing question rather than absorbed solo, and remediation costs beyond routine maintenance are a leadership funding decision, not the Security Officer's to resolve alone.
+- The runbooks fold in concrete lessons from a 2025 client multi-site compromise: check for persistence mechanisms that survive a password reset (WordPress Application Passwords, malicious browser extensions with session-cookie access, email forwarding rules) before calling an account compromise closed; check for credential reuse across unrelated systems; preserve a snapshot of a compromised site before remediating it; check whether other sites share the same codebase, host, or credential before assuming an incident is contained; audit a live server for security tooling installed outside the git/deploy pipeline before any migration touches it, so a redeploy can't silently drop a WAF or 2FA; check for exposed database dumps in git history or web-served directories; and confirm 2FA is actually enforced, not just installed, before closing out.
+- A "When an Incident Outgrows Routine Response" section, addressing the real capacity/burnout and remediation-funding questions that incident raised: a sustained incident is flagged to Nicole as a resourcing question rather than absorbed solo, and remediation costs beyond routine maintenance are a leadership funding decision, not the Security Officer's to resolve alone.
 - An honest Open Items list: no legal/regulatory breach-notification process yet, no automated alert-triage tooling across monitored sites yet, device management is self-attested only, and the shared dev-tools account (Ali/Ivy/John) is still an open decision, not yet split or tightened.
 
 ### Rationale
